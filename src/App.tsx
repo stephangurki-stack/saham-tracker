@@ -22,10 +22,25 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function LoginRoute() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-svh flex items-center justify-center bg-slate-950 text-slate-400">
+        Memuat...
+      </div>
+    )
+  }
+
+  if (user) return <Navigate to="/" replace />
+  return <Login />
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginRoute />} />
       <Route
         path="/"
         element={
