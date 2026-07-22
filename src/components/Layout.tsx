@@ -8,6 +8,7 @@ const navItems = [
   { to: '/investasi', label: 'Investasi' },
   { to: '/dividen', label: 'Dividen' },
   { to: '/watchlist', label: 'Watchlist' },
+  { to: '/analisa', label: 'Analisa' },
   { to: '/sekuritas', label: 'Sekuritas' },
 ]
 

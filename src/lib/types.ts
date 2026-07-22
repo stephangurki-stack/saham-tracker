@@ -69,3 +69,18 @@ export interface WatchlistRow {
   nilai_wajar: number | null
   tanggal_update: string
 }
+
+export type PeriodeTipe = 'tahunan' | 'triwulan'
+
+export interface StockAnalysis {
+  id: string
+  user_id: string
+  ticker: string
+  periode_tipe: PeriodeTipe
+  tahun: number
+  triwulan: number | null
+  judul: string | null
+  catatan: string
+  created_at: string
+  updated_at: string
+}
