@@ -16,14 +16,19 @@ export default function Login() {
     setInfo(null)
     setSubmitting(true)
 
-    const result = mode === 'signin' ? await signIn(email, password) : await signUp(email, password)
+    try {
+      const result = mode === 'signin' ? await signIn(email, password) : await signUp(email, password)
 
-    if (result.error) {
-      setError(result.error)
-    } else if (mode === 'signup') {
-      setInfo('Akun dibuat. Cek email untuk konfirmasi (jika diaktifkan), lalu login.')
+      if (result.error) {
+        setError(result.error)
+      } else if (mode === 'signup') {
+        setInfo('Akun dibuat. Cek email untuk konfirmasi (jika diaktifkan), lalu login.')
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Terjadi kesalahan tak terduga. Coba lagi.')
+    } finally {
+      setSubmitting(false)
     }
-    setSubmitting(false)
   }
 
   return (
