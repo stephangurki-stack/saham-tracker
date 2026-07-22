@@ -1,10 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { yahooFinanceProvider } from '../lib/priceProviders/yahooFinance'
+import { useWatchlistData } from '../hooks/useWatchlistData'
 import {
+  BUY_THRESHOLD_MOS,
   computeFairValue,
-  marginOfSafety,
   type DcfAssumptions,
   type DdmAssumptions,
   type GrahamAssumptions,
@@ -26,11 +26,10 @@ const methodLabels: Record<ValuationMethod, string> = {
 
 export default function Watchlist() {
   const { user } = useAuth()
-  const [rows, setRows] = useState<WatchlistRow[]>([])
-  const [prices, setPrices] = useState<Record<string, number>>({})
-  const [loading, setLoading] = useState(true)
+  const { withMos, loading, error: loadError, refresh } = useWatchlistData()
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [ticker, setTicker] = useState('')
   const [method, setMethod] = useState<ValuationMethod>('graham')
@@ -46,35 +45,51 @@ export default function Watchlist() {
   const [ddmGrowthRate, setDdmGrowthRate] = useState('')
   const [ddmDiscountRate, setDdmDiscountRate] = useState('')
 
-  async function load() {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('watchlist')
-      .select('*')
-      .order('tanggal_update', { ascending: false })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-    const watchlistRows = data as WatchlistRow[]
-    setRows(watchlistRows)
-
-    const tickers = watchlistRows.map((r) => r.ticker)
-    if (tickers.length > 0) {
-      try {
-        const quotes = await yahooFinanceProvider.getPrices(tickers)
-        setPrices(Object.fromEntries(Object.entries(quotes).map(([tk, q]) => [tk, q.price])))
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Gagal mengambil harga')
-      }
-    }
-    setLoading(false)
+  function resetForm() {
+    setEditingId(null)
+    setTicker('')
+    setMethod('graham')
+    setEps('')
+    setBvps('')
+    setBasis('per')
+    setTargetMultiple('')
+    setFcf('')
+    setGrowthRate('')
+    setDiscountRate('')
+    setTerminalGrowth('')
+    setNextDividend('')
+    setDdmGrowthRate('')
+    setDdmDiscountRate('')
   }
 
-  useEffect(() => {
-    load()
-  }, [])
+  function startEdit(row: WatchlistRow) {
+    setError(null)
+    setEditingId(row.id)
+    setTicker(row.ticker)
+    setMethod(row.metode_valuasi)
+    const a = row.asumsi as Record<string, number | string>
+
+    if (row.metode_valuasi === 'graham') {
+      setEps(String(a.eps ?? ''))
+      setBvps(String(a.bvps ?? ''))
+    } else if (row.metode_valuasi === 'per_pbv') {
+      setBasis((a.basis as 'per' | 'pbv') ?? 'per')
+      setEps(a.eps !== undefined ? String(a.eps) : '')
+      setBvps(a.bvps !== undefined ? String(a.bvps) : '')
+      setTargetMultiple(String(a.targetMultiple ?? ''))
+    } else if (row.metode_valuasi === 'dcf') {
+      setFcf(String(a.fcf ?? ''))
+      setGrowthRate(String(a.growthRate ?? ''))
+      setDiscountRate(String(a.discountRate ?? ''))
+      setTerminalGrowth(String(a.terminalGrowth ?? ''))
+    } else {
+      setNextDividend(String(a.nextDividend ?? ''))
+      setDdmDiscountRate(String(a.discountRate ?? ''))
+      setDdmGrowthRate(String(a.growthRate ?? ''))
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   function buildAssumptions(): ValuationAssumptions | null {
     if (method === 'graham') {
@@ -150,8 +165,8 @@ export default function Watchlist() {
 
     if (wlErr) setError(wlErr.message)
     else {
-      setTicker('')
-      load()
+      resetForm()
+      refresh()
     }
     setSubmitting(false)
   }
@@ -160,7 +175,7 @@ export default function Watchlist() {
     if (!confirm('Hapus dari watchlist?')) return
     const { error } = await supabase.from('watchlist').delete().eq('id', id)
     if (error) setError(error.message)
-    else load()
+    else refresh()
   }
 
   return (
@@ -168,6 +183,14 @@ export default function Watchlist() {
       <h1 className="text-lg font-semibold mb-4">Watchlist &amp; Nilai Wajar</h1>
 
       <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+        {editingId && (
+          <p className="text-xs text-blue-400">
+            Mengedit asumsi untuk {ticker}.{' '}
+            <button type="button" onClick={resetForm} className="underline hover:text-blue-300">
+              Batal
+            </button>
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Ticker</label>
@@ -175,7 +198,8 @@ export default function Watchlist() {
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
               placeholder="BBCA"
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+              disabled={!!editingId}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase disabled:opacity-60"
             />
           </div>
           <div>
@@ -272,46 +296,57 @@ export default function Watchlist() {
           </div>
         )}
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {(error || loadError) && <p className="text-sm text-red-400">{error ?? loadError}</p>}
 
         <button
           type="submit"
           disabled={submitting}
           className="w-full rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2"
         >
-          Simpan ke Watchlist
+          {editingId ? 'Update Watchlist' : 'Simpan ke Watchlist'}
         </button>
       </form>
 
       <h2 className="text-sm font-medium text-slate-300 mb-2">Daftar Pantauan</h2>
       {loading ? (
         <p className="text-slate-400 text-sm">Memuat...</p>
-      ) : rows.length === 0 ? (
+      ) : withMos.length === 0 ? (
         <p className="text-slate-400 text-sm">Belum ada saham di watchlist.</p>
       ) : (
         <div className="space-y-2">
-          {rows.map((r) => {
-            const price = prices[r.ticker]
-            const mos = r.nilai_wajar && price ? marginOfSafety(r.nilai_wajar, price) : null
+          {withMos.map(({ row, price, mos }) => {
             const undervalued = mos !== null && mos >= 0
+            const isBuy = mos !== null && mos >= BUY_THRESHOLD_MOS
             return (
               <div
-                key={r.id}
+                key={row.id}
                 className={`bg-slate-900 border rounded-lg p-4 ${
                   mos === null ? 'border-slate-800' : undervalued ? 'border-emerald-700' : 'border-red-700'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium">{r.ticker}</span>
-                  <button onClick={() => handleDelete(r.id)} className="text-xs text-red-400 hover:text-red-300">
-                    Hapus
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{row.ticker}</span>
+                    {isBuy && (
+                      <span className="text-xs font-semibold bg-emerald-600 text-white px-2 py-0.5 rounded">
+                        BELI
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 text-xs">
+                    <button onClick={() => startEdit(row)} className="text-blue-400 hover:text-blue-300">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(row.id)} className="text-red-400 hover:text-red-300">
+                      Hapus
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{methodLabels[r.metode_valuasi]}</p>
+                <p className="text-xs text-slate-500 mb-2">{methodLabels[row.metode_valuasi]}</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
                     <p className="text-xs text-slate-400">Nilai Wajar</p>
-                    <p>{r.nilai_wajar ? fmtRp(r.nilai_wajar) : '-'}</p>
+                    <p>{row.nilai_wajar ? fmtRp(row.nilai_wajar) : '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Harga Sekarang</p>
@@ -324,6 +359,11 @@ export default function Watchlist() {
                     </p>
                   </div>
                 </div>
+                {isBuy && (
+                  <p className="text-xs text-emerald-400 mt-2">
+                    Margin of safety ≥ {fmtPct(BUY_THRESHOLD_MOS)} — harga saat ini cukup jauh di bawah nilai wajar.
+                  </p>
+                )}
               </div>
             )
           })}

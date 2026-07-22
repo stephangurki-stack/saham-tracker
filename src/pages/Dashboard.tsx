@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom'
 import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { useWatchlistData } from '../hooks/useWatchlistData'
 import { computeCostBasisTimeline, marketValue } from '../lib/portfolio'
+import { BUY_THRESHOLD_MOS } from '../lib/valuation'
 import { CATEGORICAL, CHART_SURFACE, GRIDLINE, OTHER_SLICE, STATUS, TEXT_SECONDARY } from '../lib/chartColors'
 
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
@@ -13,6 +16,8 @@ const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Dashboard() {
   const { holdingsGabungan, transactions, prices, quotes, loading, error } = usePortfolioData()
+  const { withMos: watchlistWithMos } = useWatchlistData()
+  const buyCandidates = watchlistWithMos.filter((w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS)
 
   const held = holdingsGabungan.filter((h) => h.lot > 0)
   const totalValue = held.reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
@@ -52,6 +57,20 @@ export default function Dashboard() {
     <div className="p-4 max-w-2xl mx-auto space-y-4">
       <h1 className="text-lg font-semibold">Dashboard</h1>
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {buyCandidates.length > 0 && (
+        <Link
+          to="/watchlist"
+          className="block bg-emerald-950 border border-emerald-700 rounded-lg p-4 hover:border-emerald-500"
+        >
+          <p className="text-sm font-medium text-emerald-400 mb-1">
+            {buyCandidates.length} saham watchlist mencapai margin of safety ≥ {(BUY_THRESHOLD_MOS * 100).toFixed(0)}%
+          </p>
+          <p className="text-xs text-emerald-300">
+            {buyCandidates.map((c) => `${c.row.ticker} (+${(c.mos! * 100).toFixed(1)}%)`).join(', ')}
+          </p>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">

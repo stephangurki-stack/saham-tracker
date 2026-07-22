@@ -1,5 +1,8 @@
 export type ValuationMethod = 'graham' | 'per_pbv' | 'dcf' | 'ddm'
 
+/** Margin of safety threshold above which a watchlist stock is flagged as a buy candidate. */
+export const BUY_THRESHOLD_MOS = 0.3
+
 export interface GrahamAssumptions {
   eps: number
   bvps: number
