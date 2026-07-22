@@ -5,6 +5,9 @@ const navItems = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/portfolio', label: 'Portofolio' },
   { to: '/transaksi', label: 'Transaksi' },
+  { to: '/investasi', label: 'Investasi' },
+  { to: '/dividen', label: 'Dividen' },
+  { to: '/watchlist', label: 'Watchlist' },
   { to: '/sekuritas', label: 'Sekuritas' },
 ]
 
@@ -24,14 +27,14 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-slate-900 border-t border-slate-800 flex">
+      <nav className="fixed bottom-0 inset-x-0 bg-slate-900 border-t border-slate-800 flex overflow-x-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex-1 text-center py-3 text-sm ${
+              `flex-none min-w-[72px] text-center py-3 px-2 text-xs whitespace-nowrap ${
                 isActive ? 'text-blue-400 font-medium' : 'text-slate-400'
               }`
             }

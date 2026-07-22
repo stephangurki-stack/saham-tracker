@@ -34,3 +34,38 @@ export interface Holding {
   costBasis: number
   realizedGain: number
 }
+
+export type CashFlowType = 'deposit' | 'withdraw'
+
+export interface CashFlow {
+  id: string
+  user_id: string
+  security_id: string
+  tipe: CashFlowType
+  tanggal: string
+  jumlah: number
+  created_at: string
+}
+
+export interface Dividend {
+  id: string
+  user_id: string
+  security_id: string
+  ticker: string
+  cum_date: string | null
+  ex_date: string | null
+  tanggal_bayar: string
+  jumlah_per_lembar: number
+  total: number
+  created_at: string
+}
+
+export interface WatchlistRow {
+  id: string
+  user_id: string
+  ticker: string
+  metode_valuasi: import('./valuation').ValuationMethod
+  asumsi: Record<string, unknown>
+  nilai_wajar: number | null
+  tanggal_update: string
+}

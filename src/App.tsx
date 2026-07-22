@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard'
 import Portfolio from './pages/Portfolio'
 import Transactions from './pages/Transactions'
 import Securities from './pages/Securities'
+import Investasi from './pages/Investasi'
+import Dividen from './pages/Dividen'
+import Watchlist from './pages/Watchlist'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -52,6 +55,9 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="transaksi" element={<Transactions />} />
+        <Route path="investasi" element={<Investasi />} />
+        <Route path="dividen" element={<Dividen />} />
+        <Route path="watchlist" element={<Watchlist />} />
         <Route path="sekuritas" element={<Securities />} />
       </Route>
     </Routes>
