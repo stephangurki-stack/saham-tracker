@@ -16,10 +16,10 @@ export default function Layout() {
   const { signOut } = useAuth()
 
   return (
-    <div className="min-h-svh flex flex-col bg-slate-950 text-slate-100">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+    <div className="min-h-svh flex flex-col bg-slate-50 text-slate-900">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
         <span className="font-semibold">Portfolio Tracker IDX</span>
-        <button onClick={signOut} className="text-sm text-slate-400 hover:text-slate-200">
+        <button onClick={signOut} className="text-sm text-slate-600 hover:text-slate-800">
           Keluar
         </button>
       </header>
@@ -28,7 +28,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-slate-900 border-t border-slate-800 flex overflow-x-auto">
+      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex overflow-x-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -36,7 +36,7 @@ export default function Layout() {
             end={item.end}
             className={({ isActive }) =>
               `flex-none min-w-[72px] text-center py-3 px-2 text-xs whitespace-nowrap ${
-                isActive ? 'text-blue-400 font-medium' : 'text-slate-400'
+                isActive ? 'text-blue-600 font-medium' : 'text-slate-600'
               }`
             }
           >

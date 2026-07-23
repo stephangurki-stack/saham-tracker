@@ -21,13 +21,13 @@ function HoldingsTable({
   const weights = portfolioWeights(held, prices)
 
   if (held.length === 0) {
-    return <p className="text-slate-400 text-sm">Belum ada posisi terbuka.</p>
+    return <p className="text-slate-600 text-sm">Belum ada posisi terbuka.</p>
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="text-slate-400 text-left">
+        <thead className="text-slate-600 text-left">
           <tr>
             <th className="py-1 pr-3">Ticker</th>
             <th className="py-1 pr-3">Lot</th>
@@ -50,20 +50,20 @@ function HoldingsTable({
             const fairValue = fairValues[h.ticker]
             const mos = fairValue && price ? marginOfSafety(fairValue, price) : null
             return (
-              <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-800">
+              <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200">
                 <td className="py-1 pr-3 font-medium">{h.ticker}</td>
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(value) : '-'}</td>
-                <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtNum(gain)}
                 </td>
-                <td className={`py-1 pr-3 ${gainPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`py-1 pr-3 ${gainPct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtPct(gainPct)}
                 </td>
                 <td className="py-1 pr-3">{fmtPct(weight)}</td>
-                <td className={`py-1 ${mos === null ? 'text-slate-500' : mos >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`py-1 ${mos === null ? 'text-slate-400' : mos >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {mos !== null ? (mos >= 0 ? '+' : '') + fmtPct(mos) : 'Belum ada'}
                 </td>
               </tr>
@@ -108,38 +108,38 @@ export default function Portfolio() {
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-lg font-semibold">Portofolio</h1>
-        <button onClick={refresh} className="text-sm text-blue-400 hover:text-blue-300">
+        <button onClick={refresh} className="text-sm text-blue-600 hover:text-blue-700">
           Refresh harga
         </button>
       </div>
-      <p className="text-xs text-slate-500 mb-4">Semua nilai dalam Rupiah (Rp)</p>
+      <p className="text-xs text-slate-400 mb-4">Semua nilai dalam Rupiah (Rp)</p>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
-        <p className="text-xs text-slate-400">Total Nilai Portofolio</p>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
+        <p className="text-xs text-slate-600">Total Nilai Portofolio</p>
         <p className="text-2xl font-semibold">{fmtNum(totalValue)}</p>
-        <p className={`text-sm mt-1 mb-3 ${totalGain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <p className={`text-sm mt-1 mb-3 ${totalGain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
           {totalGain >= 0 ? '+' : ''}
           {fmtNum(totalGain)} unrealized
         </p>
-        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
           <div>
-            <p className="text-xs text-slate-400">Nilai Saham</p>
+            <p className="text-xs text-slate-600">Nilai Saham</p>
             <p className="text-base font-medium">{fmtNum(stockValue)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Kas</p>
-            <p className={`text-base font-medium ${cashForTab < 0 ? 'text-red-400' : ''}`}>{fmtNum(cashForTab)}</p>
+            <p className="text-xs text-slate-600">Kas</p>
+            <p className={`text-base font-medium ${cashForTab < 0 ? 'text-red-600' : ''}`}>{fmtNum(cashForTab)}</p>
           </div>
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       <div className="flex gap-2 mb-4 overflow-x-auto">
         <button
           onClick={() => setTab('gabungan')}
           className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap ${
-            tab === 'gabungan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'
+            tab === 'gabungan' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
           }`}
         >
           Gabungan
@@ -149,7 +149,7 @@ export default function Portfolio() {
             key={s.id}
             onClick={() => setTab(s.id)}
             className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap ${
-              tab === s.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'
+              tab === s.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
             }`}
           >
             {s.nama}
@@ -158,7 +158,7 @@ export default function Portfolio() {
       </div>
 
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : (
         <HoldingsTable holdings={holdingsForTab} prices={prices} fairValues={fairValues} />
       )}

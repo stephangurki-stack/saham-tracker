@@ -238,32 +238,32 @@ export default function Watchlist() {
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-lg font-semibold mb-4">Watchlist &amp; Nilai Wajar</h1>
 
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+      <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
         {editingId && (
-          <p className="text-xs text-blue-400">
+          <p className="text-xs text-blue-600">
             Mengedit asumsi untuk {ticker}.{' '}
-            <button type="button" onClick={resetForm} className="underline hover:text-blue-300">
+            <button type="button" onClick={resetForm} className="underline hover:text-blue-700">
               Batal
             </button>
           </p>
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Ticker</label>
+            <label className="block text-xs text-slate-600 mb-1">Ticker</label>
             <input
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
               placeholder="BBCA"
               disabled={!!editingId}
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase disabled:opacity-60"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase disabled:opacity-60"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Metode Valuasi</label>
+            <label className="block text-xs text-slate-600 mb-1">Metode Valuasi</label>
             <select
               value={method}
               onChange={(e) => handleMethodChange(e.target.value as ValuationMethod)}
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
             >
               {(Object.keys(methodLabels) as ValuationMethod[]).map((m) => (
                 <option key={m} value={m}>
@@ -280,23 +280,23 @@ export default function Watchlist() {
               type="button"
               onClick={handleFetchFundamentals}
               disabled={fetchingFundamentals}
-              className="text-xs rounded-md bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 px-2.5 py-1.5 border border-slate-700"
+              className="text-xs rounded-md bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 px-2.5 py-1.5 border border-slate-300"
             >
               {fetchingFundamentals ? 'Mengambil...' : 'Ambil EPS/BVPS dari Yahoo Finance'}
             </button>
-            {fundamentalsNote && <span className="text-xs text-slate-500">{fundamentalsNote}</span>}
+            {fundamentalsNote && <span className="text-xs text-slate-400">{fundamentalsNote}</span>}
           </div>
         )}
 
         {method === 'graham' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">EPS (Rp)</label>
-              <input type="number" value={eps} onChange={(e) => setEps(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">EPS (Rp)</label>
+              <input type="number" value={eps} onChange={(e) => setEps(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">BVPS (Rp)</label>
-              <input type="number" value={bvps} onChange={(e) => setBvps(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">BVPS (Rp)</label>
+              <input type="number" value={bvps} onChange={(e) => setBvps(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
           </div>
         )}
@@ -304,25 +304,25 @@ export default function Watchlist() {
         {method === 'per_pbv' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Basis</label>
-              <select value={basis} onChange={(e) => setBasis(e.target.value as 'per' | 'pbv')} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100">
+              <label className="block text-xs text-slate-600 mb-1">Basis</label>
+              <select value={basis} onChange={(e) => setBasis(e.target.value as 'per' | 'pbv')} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900">
                 <option value="per">PER (pakai EPS)</option>
                 <option value="pbv">PBV (pakai BVPS)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Target Multiple</label>
-              <input type="number" value={targetMultiple} onChange={(e) => setTargetMultiple(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Target Multiple</label>
+              <input type="number" value={targetMultiple} onChange={(e) => setTargetMultiple(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             {basis === 'per' ? (
               <div>
-                <label className="block text-xs text-slate-400 mb-1">EPS (Rp)</label>
-                <input type="number" value={eps} onChange={(e) => setEps(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+                <label className="block text-xs text-slate-600 mb-1">EPS (Rp)</label>
+                <input type="number" value={eps} onChange={(e) => setEps(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
               </div>
             ) : (
               <div>
-                <label className="block text-xs text-slate-400 mb-1">BVPS (Rp)</label>
-                <input type="number" value={bvps} onChange={(e) => setBvps(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+                <label className="block text-xs text-slate-600 mb-1">BVPS (Rp)</label>
+                <input type="number" value={bvps} onChange={(e) => setBvps(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
               </div>
             )}
           </div>
@@ -331,20 +331,20 @@ export default function Watchlist() {
         {method === 'dcf' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">FCF per Lembar (Rp)</label>
-              <input type="number" value={fcf} onChange={(e) => setFcf(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">FCF per Lembar (Rp)</label>
+              <input type="number" value={fcf} onChange={(e) => setFcf(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Growth Rate (mis. 0.1)</label>
-              <input type="number" step="0.01" value={growthRate} onChange={(e) => setGrowthRate(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Growth Rate (mis. 0.1)</label>
+              <input type="number" step="0.01" value={growthRate} onChange={(e) => setGrowthRate(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Discount Rate (mis. 0.12)</label>
-              <input type="number" step="0.01" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Discount Rate (mis. 0.12)</label>
+              <input type="number" step="0.01" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Terminal Growth (mis. 0.03)</label>
-              <input type="number" step="0.01" value={terminalGrowth} onChange={(e) => setTerminalGrowth(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Terminal Growth (mis. 0.03)</label>
+              <input type="number" step="0.01" value={terminalGrowth} onChange={(e) => setTerminalGrowth(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
           </div>
         )}
@@ -352,28 +352,28 @@ export default function Watchlist() {
         {method === 'ddm' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Dividen Tahun Depan (Rp)</label>
-              <input type="number" value={nextDividend} onChange={(e) => setNextDividend(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Dividen Tahun Depan (Rp)</label>
+              <input type="number" value={nextDividend} onChange={(e) => setNextDividend(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Discount Rate (mis. 0.1)</label>
-              <input type="number" step="0.01" value={ddmDiscountRate} onChange={(e) => setDdmDiscountRate(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Discount Rate (mis. 0.1)</label>
+              <input type="number" step="0.01" value={ddmDiscountRate} onChange={(e) => setDdmDiscountRate(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Growth Rate (mis. 0.04)</label>
-              <input type="number" step="0.01" value={ddmGrowthRate} onChange={(e) => setDdmGrowthRate(e.target.value)} className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100" />
+              <label className="block text-xs text-slate-600 mb-1">Growth Rate (mis. 0.04)</label>
+              <input type="number" step="0.01" value={ddmGrowthRate} onChange={(e) => setDdmGrowthRate(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
           </div>
         )}
 
-        <div className="bg-slate-800/60 border border-slate-700 rounded-md px-3 py-2">
-          <p className="text-xs text-slate-400">Nilai Wajar (preview)</p>
+        <div className="bg-slate-100/60 border border-slate-300 rounded-md px-3 py-2">
+          <p className="text-xs text-slate-600">Nilai Wajar (preview)</p>
           <p className="text-lg font-semibold">
             {livePreview !== null ? fmtRp(livePreview) : hasRequiredInputs() ? 'Input tidak valid' : '-'}
           </p>
         </div>
 
-        {(error || loadError) && <p className="text-sm text-red-400">{error ?? loadError}</p>}
+        {(error || loadError) && <p className="text-sm text-red-600">{error ?? loadError}</p>}
 
         <button
           type="submit"
@@ -384,11 +384,11 @@ export default function Watchlist() {
         </button>
       </form>
 
-      <h2 className="text-sm font-medium text-slate-300 mb-2">Daftar Pantauan</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Daftar Pantauan</h2>
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : withMos.length === 0 ? (
-        <p className="text-slate-400 text-sm">Belum ada saham di watchlist.</p>
+        <p className="text-slate-600 text-sm">Belum ada saham di watchlist.</p>
       ) : (
         <div className="space-y-2">
           {withMos.map(({ row, price, mos }) => {
@@ -397,8 +397,8 @@ export default function Watchlist() {
             return (
               <div
                 key={row.id}
-                className={`bg-slate-900 border rounded-lg p-4 ${
-                  mos === null ? 'border-slate-800' : undervalued ? 'border-emerald-700' : 'border-red-700'
+                className={`bg-white border rounded-lg p-4 ${
+                  mos === null ? 'border-slate-200' : undervalued ? 'border-emerald-300' : 'border-red-300'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -410,39 +410,39 @@ export default function Watchlist() {
                       </span>
                     )}
                     {ownedTickers.has(row.ticker) && (
-                      <span className="text-xs font-medium bg-slate-700 text-slate-300 px-2 py-0.5 rounded">
+                      <span className="text-xs font-medium bg-slate-200 text-slate-700 px-2 py-0.5 rounded">
                         Di Portofolio
                       </span>
                     )}
                   </div>
                   <div className="flex gap-3 text-xs">
-                    <button onClick={() => startEdit(row)} className="text-blue-400 hover:text-blue-300">
+                    <button onClick={() => startEdit(row)} className="text-blue-600 hover:text-blue-700">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(row.id)} className="text-red-400 hover:text-red-300">
+                    <button onClick={() => handleDelete(row.id)} className="text-red-600 hover:text-red-700">
                       Hapus
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{methodLabels[row.metode_valuasi]}</p>
+                <p className="text-xs text-slate-400 mb-2">{methodLabels[row.metode_valuasi]}</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <p className="text-xs text-slate-400">Nilai Wajar</p>
+                    <p className="text-xs text-slate-600">Nilai Wajar</p>
                     <p>{row.nilai_wajar ? fmtRp(row.nilai_wajar) : '-'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Harga Sekarang</p>
+                    <p className="text-xs text-slate-600">Harga Sekarang</p>
                     <p>{price ? fmtRp(price) : '-'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Margin of Safety</p>
-                    <p className={undervalued ? 'text-emerald-400' : 'text-red-400'}>
+                    <p className="text-xs text-slate-600">Margin of Safety</p>
+                    <p className={undervalued ? 'text-emerald-600' : 'text-red-600'}>
                       {mos !== null ? fmtPct(mos) : '-'}
                     </p>
                   </div>
                 </div>
                 {isBuy && (
-                  <p className="text-xs text-emerald-400 mt-2">
+                  <p className="text-xs text-emerald-600 mt-2">
                     Margin of safety ≥ {fmtPct(BUY_THRESHOLD_MOS)} — harga saat ini cukup jauh di bawah nilai wajar.
                   </p>
                 )}

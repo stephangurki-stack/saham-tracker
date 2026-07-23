@@ -133,37 +133,37 @@ export default function Dashboard() {
 
   const costBasisTimeline = computeCostBasisTimeline(transactions)
 
-  if (loading) return <div className="p-4 text-slate-400 text-sm">Memuat...</div>
+  if (loading) return <div className="p-4 text-slate-600 text-sm">Memuat...</div>
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
       <h1 className="text-lg font-semibold">Dashboard</h1>
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       {buyCandidates.length > 0 && (
         <Link
           to="/watchlist"
-          className="block bg-emerald-950 border border-emerald-700 rounded-lg p-4 hover:border-emerald-500"
+          className="block bg-emerald-50 border border-emerald-300 rounded-lg p-4 hover:border-emerald-500"
         >
-          <p className="text-sm font-medium text-emerald-400 mb-1">
+          <p className="text-sm font-medium text-emerald-600 mb-1">
             {buyCandidates.length} saham watchlist mencapai margin of safety ≥ {(BUY_THRESHOLD_MOS * 100).toFixed(0)}%
           </p>
-          <p className="text-xs text-emerald-300">
+          <p className="text-xs text-emerald-700">
             {buyCandidates.map((c) => `${c.row.ticker} (+${(c.mos! * 100).toFixed(1)}%)`).join(', ')}
           </p>
         </Link>
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Total Nilai Portofolio</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Total Nilai Portofolio</p>
           <p className="text-xl font-semibold">{fmtRp(portfolioValue)}</p>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Saham {fmtRpCompact(stockValue)} · Kas {fmtRpCompact(cashBalance)}
           </p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Unrealized P/L</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Unrealized P/L</p>
           <p
             className="text-xl font-semibold"
             style={{ color: totalGain >= 0 ? STATUS.good : STATUS.critical }}
@@ -177,8 +177,8 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Growth (sejak awal)</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Growth (sejak awal)</p>
           {growthSinceInception !== null ? (
             <>
               <p
@@ -187,7 +187,7 @@ export default function Dashboard() {
               >
                 {fmtPct(growthSinceInception)}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Modal {fmtRpCompact(netDeposited)} → Kini {fmtRpCompact(portfolioValue)}
               </p>
               <p
@@ -198,32 +198,32 @@ export default function Dashboard() {
               </p>
             </>
           ) : (
-            <p className="text-sm text-slate-500 mt-1">Belum ada setoran tercatat</p>
+            <p className="text-sm text-slate-400 mt-1">Belum ada setoran tercatat</p>
           )}
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Annual Growth</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Annual Growth</p>
           {growthYoY !== null ? (
             <Link to="/growth" className="block hover:opacity-80">
               <p className="text-lg font-semibold" style={{ color: growthYoY >= 0 ? STATUS.good : STATUS.critical }}>
                 {fmtPct(growthYoY)}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Awal {fmtRpCompact(lastYearSnapshot!.total)} + Top Up {fmtRpCompact(topUpThisYear)} · P/L{' '}
                 {fmtRpCompact(profitLossThisYear)}
               </p>
-              <p className="text-xs text-blue-400 mt-1">Lihat riwayat →</p>
+              <p className="text-xs text-blue-600 mt-1">Lihat riwayat →</p>
             </Link>
           ) : (
             <div>
-              <p className="text-xs text-slate-500 mb-1.5">Isi nilai akhir {currentYear - 1}</p>
+              <p className="text-xs text-slate-400 mb-1.5">Isi nilai akhir {currentYear - 1}</p>
               <div className="flex gap-1.5">
                 <input
                   type="number"
                   value={lastYearInput}
                   onChange={(e) => setLastYearInput(e.target.value)}
                   placeholder="Rp"
-                  className="w-full min-w-0 rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-xs text-slate-100"
+                  className="w-full min-w-0 rounded-md bg-slate-100 border border-slate-300 px-2 py-1 text-xs text-slate-900"
                 />
                 <button
                   onClick={handleSaveLastYear}
@@ -239,11 +239,11 @@ export default function Dashboard() {
       </div>
 
       {(gainers.length > 0 || losers.length > 0) && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm font-medium text-slate-300 mb-3">Top Gainers/Losers Hari Ini</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-sm font-medium text-slate-700 mb-3">Top Gainers/Losers Hari Ini</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-slate-500 mb-2">Gainers</p>
+              <p className="text-xs text-slate-400 mb-2">Gainers</p>
               <ul className="space-y-1.5">
                 {gainers.map((m) => (
                   <li key={m.ticker} className="flex justify-between text-sm">
@@ -254,7 +254,7 @@ export default function Dashboard() {
               </ul>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-2">Losers</p>
+              <p className="text-xs text-slate-400 mb-2">Losers</p>
               <ul className="space-y-1.5">
                 {losers.map((m) => (
                   <li key={m.ticker} className="flex justify-between text-sm">
@@ -269,8 +269,8 @@ export default function Dashboard() {
       )}
 
       {pieData.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm font-medium text-slate-300 mb-3">Alokasi Portofolio</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-sm font-medium text-slate-700 mb-3">Alokasi Portofolio</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -294,7 +294,7 @@ export default function Dashboard() {
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
             {pieData.map((entry, i) => (
-              <div key={entry.ticker} className="flex items-center gap-1.5 text-xs text-slate-400">
+              <div key={entry.ticker} className="flex items-center gap-1.5 text-xs text-slate-600">
                 <span
                   className="inline-block w-2.5 h-2.5 rounded-full"
                   style={{ background: entry.ticker === 'Lainnya' ? OTHER_SLICE : CATEGORICAL[i % CATEGORICAL.length] }}
@@ -307,9 +307,9 @@ export default function Dashboard() {
       )}
 
       {costBasisTimeline.length > 1 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-sm font-medium text-slate-300 mb-1">Modal Diinvestasikan dari Waktu ke Waktu</p>
-          <p className="text-xs text-slate-500 mb-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-sm font-medium text-slate-700 mb-1">Modal Diinvestasikan dari Waktu ke Waktu</p>
+          <p className="text-xs text-slate-400 mb-3">
             Cost basis tertanam berdasarkan riwayat transaksi (bukan nilai pasar historis)
           </p>
           <div className="h-56">
@@ -353,7 +353,7 @@ export default function Dashboard() {
       )}
 
       {held.length === 0 && (
-        <p className="text-slate-400 text-sm">
+        <p className="text-slate-600 text-sm">
           Belum ada posisi. Catat transaksi pertama di halaman Transaksi.
         </p>
       )}

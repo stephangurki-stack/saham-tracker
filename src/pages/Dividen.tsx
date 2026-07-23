@@ -245,21 +245,21 @@ export default function Dividen() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-lg font-semibold mb-1">Dividen</h1>
-      <p className="text-xs text-slate-500 mb-4">Semua nilai dalam Rupiah (Rp)</p>
+      <p className="text-xs text-slate-400 mb-4">Semua nilai dalam Rupiah (Rp)</p>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
-            <p className="text-xs text-slate-400">Realisasi {currentYear}</p>
-            <p className="text-xl font-semibold text-emerald-400">{fmtNum(totalTahunIni)}</p>
+            <p className="text-xs text-slate-600">Realisasi {currentYear}</p>
+            <p className="text-xl font-semibold text-emerald-600">{fmtNum(totalTahunIni)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Target {currentYear}</p>
+            <p className="text-xs text-slate-600">Target {currentYear}</p>
             <p className="text-xl font-semibold">{targetTahunIni ? fmtNum(targetTahunIni) : '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Realisasi %</p>
-            <p className={`text-xl font-semibold ${realisasiPct !== null && realisasiPct >= 1 ? 'text-emerald-400' : ''}`}>
+            <p className="text-xs text-slate-600">Realisasi %</p>
+            <p className={`text-xl font-semibold ${realisasiPct !== null && realisasiPct >= 1 ? 'text-emerald-600' : ''}`}>
               {realisasiPct !== null ? fmtPct(realisasiPct) : '-'}
             </p>
           </div>
@@ -270,7 +270,7 @@ export default function Dividen() {
             value={targetInput}
             onChange={(e) => setTargetInput(e.target.value)}
             placeholder={`Set target dividen ${currentYear} (Rp)`}
-            className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+            className="flex-1 rounded-md bg-slate-100 border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
           />
           <button
             onClick={handleSaveTarget}
@@ -283,26 +283,26 @@ export default function Dividen() {
       </div>
 
       {securities.length === 0 && !loading ? (
-        <p className="text-sm text-amber-400 mb-4">
+        <p className="text-sm text-amber-600 mb-4">
           Belum ada akun sekuritas. Tambahkan dulu di halaman Sekuritas.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
           {editingId && (
-            <p className="text-xs text-blue-400">
+            <p className="text-xs text-blue-600">
               Mengedit catatan {ticker}.{' '}
-              <button type="button" onClick={resetForm} className="underline hover:text-blue-300">
+              <button type="button" onClick={resetForm} className="underline hover:text-blue-700">
                 Batal
               </button>
             </p>
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Sekuritas</label>
+              <label className="block text-xs text-slate-600 mb-1">Sekuritas</label>
               <select
                 value={securityId}
                 onChange={(e) => handleSecurityChange(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               >
                 {securities.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -312,14 +312,14 @@ export default function Dividen() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Ticker</label>
+              <label className="block text-xs text-slate-600 mb-1">Ticker</label>
               {heldForSecurity.length > 0 ? (
                 <select
                   value={heldForSecurity.some((h) => h.ticker === ticker) ? ticker : '__manual__'}
                   onChange={(e) =>
                     e.target.value === '__manual__' ? setTicker('') : handleTickerChange(e.target.value)
                   }
-                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
                 >
                   {heldForSecurity.map((h) => (
                     <option key={h.ticker} value={h.ticker}>
@@ -333,7 +333,7 @@ export default function Dividen() {
                   value={ticker}
                   onChange={(e) => setTicker(e.target.value)}
                   placeholder="BBCA"
-                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
                 />
               )}
               {heldForSecurity.length > 0 && !heldForSecurity.some((h) => h.ticker === ticker) && (
@@ -341,50 +341,50 @@ export default function Dividen() {
                   value={ticker}
                   onChange={(e) => setTicker(e.target.value)}
                   placeholder="Ketik ticker"
-                  className="w-full mt-2 rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+                  className="w-full mt-2 rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
                 />
               )}
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Tanggal Bayar</label>
+              <label className="block text-xs text-slate-600 mb-1">Tanggal Bayar</label>
               <input
                 type="date"
                 value={tanggalBayar}
                 onChange={(e) => setTanggalBayar(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Lot</label>
+              <label className="block text-xs text-slate-600 mb-1">Lot</label>
               <input
                 type="number"
                 value={lot}
                 onChange={(e) => handleLotChange(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Rp / Lembar</label>
+              <label className="block text-xs text-slate-600 mb-1">Rp / Lembar</label>
               <input
                 type="number"
                 value={jumlahPerLembar}
                 onChange={(e) => handlePerLembarChange(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Total Diterima (Rp)</label>
+              <label className="block text-xs text-slate-600 mb-1">Total Diterima (Rp)</label>
               <input
                 type="number"
                 value={total}
                 onChange={(e) => setTotal(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
-              <p className="text-xs text-slate-500 mt-1">Auto dari Lot × Rp/Lembar, bisa diedit (mis. setelah pajak)</p>
+              <p className="text-xs text-slate-400 mt-1">Auto dari Lot × Rp/Lembar, bisa diedit (mis. setelah pajak)</p>
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
@@ -397,14 +397,14 @@ export default function Dividen() {
       )}
 
       {rekapPerSaham.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-slate-300 mb-1">Rekap Dividen per Saham</p>
-          <p className="text-xs text-slate-500 mb-2">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-slate-700 mb-1">Rekap Dividen per Saham</p>
+          <p className="text-xs text-slate-400 mb-2">
             Yield dihitung terhadap cost basis (modal tertanam) saham tersebut saat ini
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-slate-400 text-left">
+              <thead className="text-slate-600 text-left">
                 <tr>
                   <th className="py-1 pr-2">Ticker</th>
                   <th className="py-1 pr-2 text-right">Total Dividen</th>
@@ -415,7 +415,7 @@ export default function Dividen() {
               </thead>
               <tbody>
                 {rekapPerSaham.map((r) => (
-                  <tr key={r.ticker} className="border-t border-slate-800">
+                  <tr key={r.ticker} className="border-t border-slate-200">
                     <td className="py-1 pr-2 font-medium">{r.ticker}</td>
                     <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
                     <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
@@ -430,10 +430,10 @@ export default function Dividen() {
       )}
 
       {tahunSorted.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-slate-300 mb-2">Rekap per Tahun</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-slate-700 mb-2">Rekap per Tahun</p>
           <table className="w-full text-sm">
-            <thead className="text-slate-400 text-left">
+            <thead className="text-slate-600 text-left">
               <tr>
                 <th className="py-1 pr-2">Tahun</th>
                 <th className="py-1 pr-2 text-right">Realisasi</th>
@@ -446,11 +446,11 @@ export default function Dividen() {
                 const target = targetByYear.get(year) ?? null
                 const pct = target ? perTahun.get(year)! / target : null
                 return (
-                  <tr key={year} className="border-t border-slate-800">
+                  <tr key={year} className="border-t border-slate-200">
                     <td className="py-1 pr-2">{year}</td>
                     <td className="py-1 pr-2 text-right">{fmtNum(perTahun.get(year)!)}</td>
                     <td className="py-1 pr-2 text-right">{target ? fmtNum(target) : '-'}</td>
-                    <td className={`py-1 text-right ${pct !== null && pct >= 1 ? 'text-emerald-400' : ''}`}>
+                    <td className={`py-1 text-right ${pct !== null && pct >= 1 ? 'text-emerald-600' : ''}`}>
                       {pct !== null ? fmtPct(pct) : '-'}
                     </td>
                   </tr>
@@ -461,15 +461,15 @@ export default function Dividen() {
         </div>
       )}
 
-      <h2 className="text-sm font-medium text-slate-300 mb-2">Riwayat Dividen</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Riwayat Dividen</h2>
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : dividends.length === 0 ? (
-        <p className="text-slate-400 text-sm">Belum ada catatan dividen.</p>
+        <p className="text-slate-600 text-sm">Belum ada catatan dividen.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-slate-400 text-left">
+            <thead className="text-slate-600 text-left">
               <tr>
                 <th className="py-1 pr-2">Tanggal Bayar</th>
                 <th className="py-1 pr-2">Ticker</th>
@@ -482,7 +482,7 @@ export default function Dividen() {
             </thead>
             <tbody>
               {dividends.map((d) => (
-                <tr key={d.id} className="border-t border-slate-800">
+                <tr key={d.id} className="border-t border-slate-200">
                   <td className="py-1 pr-2">{d.tanggal_bayar}</td>
                   <td className="py-1 pr-2 font-medium">{d.ticker}</td>
                   <td className="py-1 pr-2">{d.lot ?? '-'}</td>
@@ -490,10 +490,10 @@ export default function Dividen() {
                   <td className="py-1 pr-2">{fmtNum(d.total)}</td>
                   <td className="py-1 pr-2">{securityName(d.security_id)}</td>
                   <td className="py-1 whitespace-nowrap">
-                    <button onClick={() => startEdit(d)} className="text-blue-400 hover:text-blue-300 mr-3">
+                    <button onClick={() => startEdit(d)} className="text-blue-600 hover:text-blue-700 mr-3">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(d.id)} className="text-red-400 hover:text-red-300">
+                    <button onClick={() => handleDelete(d.id)} className="text-red-600 hover:text-red-700">
                       Hapus
                     </button>
                   </td>

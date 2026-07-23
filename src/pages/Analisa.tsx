@@ -130,52 +130,52 @@ export default function Analisa() {
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-lg font-semibold mb-4">Analisa Laporan Keuangan</h1>
 
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+      <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
         {editingId && (
-          <p className="text-xs text-blue-400">
+          <p className="text-xs text-blue-600">
             Mengedit catatan {ticker}.{' '}
-            <button type="button" onClick={resetForm} className="underline hover:text-blue-300">
+            <button type="button" onClick={resetForm} className="underline hover:text-blue-700">
               Batal
             </button>
           </p>
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Ticker</label>
+            <label className="block text-xs text-slate-600 mb-1">Ticker</label>
             <input
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
               placeholder="BBCA"
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Jenis Periode</label>
+            <label className="block text-xs text-slate-600 mb-1">Jenis Periode</label>
             <select
               value={periodeTipe}
               onChange={(e) => setPeriodeTipe(e.target.value as PeriodeTipe)}
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
             >
               <option value="tahunan">Tahunan</option>
               <option value="triwulan">Triwulan</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Tahun</label>
+            <label className="block text-xs text-slate-600 mb-1">Tahun</label>
             <input
               type="number"
               value={tahun}
               onChange={(e) => setTahun(e.target.value)}
-              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
             />
           </div>
           {periodeTipe === 'triwulan' && (
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Triwulan</label>
+              <label className="block text-xs text-slate-600 mb-1">Triwulan</label>
               <select
                 value={triwulan}
                 onChange={(e) => setTriwulan(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               >
                 <option value="1">Q1</option>
                 <option value="2">Q2</option>
@@ -187,26 +187,26 @@ export default function Analisa() {
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Judul (opsional)</label>
+          <label className="block text-xs text-slate-600 mb-1">Judul (opsional)</label>
           <input
             value={judul}
             onChange={(e) => setJudul(e.target.value)}
             placeholder="mis. Kinerja solid, margin membaik"
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+            className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Catatan / Ringkasan Analisa</label>
+          <label className="block text-xs text-slate-600 mb-1">Catatan / Ringkasan Analisa</label>
           <textarea
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
             rows={5}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+            className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
           />
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           type="submit"
@@ -221,7 +221,7 @@ export default function Analisa() {
         <select
           value={filterTicker}
           onChange={(e) => setFilterTicker(e.target.value)}
-          className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+          className="rounded-md bg-slate-100 border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
         >
           <option value="semua">Semua Ticker</option>
           {tickers.map((t) => (
@@ -233,7 +233,7 @@ export default function Analisa() {
         <select
           value={filterTahun}
           onChange={(e) => setFilterTahun(e.target.value)}
-          className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+          className="rounded-md bg-slate-100 border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
         >
           <option value="semua">Semua Tahun</option>
           {tahunList.map((y) => (
@@ -245,29 +245,29 @@ export default function Analisa() {
       </div>
 
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-slate-400 text-sm">Belum ada catatan analisa.</p>
+        <p className="text-slate-600 text-sm">Belum ada catatan analisa.</p>
       ) : (
         <div className="space-y-2">
           {filtered.map((a) => (
-            <div key={a.id} className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <div key={a.id} className="bg-white border border-slate-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{a.ticker}</span>
-                  <span className="text-xs text-slate-500">{periodeLabel(a)}</span>
+                  <span className="text-xs text-slate-400">{periodeLabel(a)}</span>
                 </div>
                 <div className="flex gap-3 text-xs">
-                  <button onClick={() => startEdit(a)} className="text-blue-400 hover:text-blue-300">
+                  <button onClick={() => startEdit(a)} className="text-blue-600 hover:text-blue-700">
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(a.id)} className="text-red-400 hover:text-red-300">
+                  <button onClick={() => handleDelete(a.id)} className="text-red-600 hover:text-red-700">
                     Hapus
                   </button>
                 </div>
               </div>
-              {a.judul && <p className="text-sm font-medium text-slate-200 mb-1">{a.judul}</p>}
-              <p className="text-sm text-slate-400 whitespace-pre-wrap">{a.catatan}</p>
+              {a.judul && <p className="text-sm font-medium text-slate-800 mb-1">{a.judul}</p>}
+              <p className="text-sm text-slate-600 whitespace-pre-wrap">{a.catatan}</p>
             </div>
           ))}
         </div>

@@ -67,29 +67,29 @@ export default function Securities() {
           value={nama}
           onChange={(e) => setNama(e.target.value)}
           placeholder="Nama sekuritas (mis. Mirae, Stockbit)"
-          className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 rounded-md bg-slate-100 border border-slate-300 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button type="submit" className="rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2">
           Tambah
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : securities.length === 0 ? (
-        <p className="text-slate-400 text-sm">Belum ada akun sekuritas. Tambahkan di atas.</p>
+        <p className="text-slate-600 text-sm">Belum ada akun sekuritas. Tambahkan di atas.</p>
       ) : (
         <ul className="space-y-2">
           {securities.map((s) => (
             <li
               key={s.id}
-              className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-md px-3 py-2"
+              className="flex items-center justify-between bg-white border border-slate-200 rounded-md px-3 py-2"
             >
               <span>{s.nama}</span>
               <button
                 onClick={() => handleDelete(s.id)}
-                className="text-sm text-red-400 hover:text-red-300"
+                className="text-sm text-red-600 hover:text-red-700"
               >
                 Hapus
               </button>
@@ -98,17 +98,17 @@ export default function Securities() {
         </ul>
       )}
 
-      <div className="mt-8 bg-slate-900 border border-slate-800 rounded-lg p-4">
-        <p className="text-sm font-medium text-slate-300 mb-1">Backup Data</p>
-        <p className="text-xs text-slate-500 mb-3">
+      <div className="mt-8 bg-white border border-slate-200 rounded-lg p-4">
+        <p className="text-sm font-medium text-slate-700 mb-1">Backup Data</p>
+        <p className="text-xs text-slate-400 mb-3">
           Unduh seluruh data Anda (sekuritas, transaksi, investasi, dividen, watchlist, analisa) sebagai satu file
           Excel dengan satu sheet per jenis data.
         </p>
-        {exportError && <p className="text-sm text-red-400 mb-2">{exportError}</p>}
+        {exportError && <p className="text-sm text-red-600 mb-2">{exportError}</p>}
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm px-4 py-2"
+          className="rounded-md bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-white text-sm px-4 py-2"
         >
           {exporting ? 'Menyiapkan file...' : 'Export ke Excel'}
         </button>

@@ -17,7 +17,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-svh flex items-center justify-center bg-slate-950 text-slate-400">
+      <div className="min-h-svh flex items-center justify-center bg-slate-50 text-slate-600">
         Memuat...
       </div>
     )
@@ -32,7 +32,7 @@ function LoginRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-svh flex items-center justify-center bg-slate-950 text-slate-400">
+      <div className="min-h-svh flex items-center justify-center bg-slate-50 text-slate-600">
         Memuat...
       </div>
     )

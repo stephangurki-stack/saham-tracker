@@ -107,41 +107,41 @@ export default function Investasi() {
       <h1 className="text-lg font-semibold mb-4">Investasi</h1>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Modal Disetor (Net)</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Modal Disetor (Net)</p>
           <p className="text-xl font-semibold">{fmtRp(netDeposited)}</p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Nilai Portofolio Sekarang</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Nilai Portofolio Sekarang</p>
           <p className="text-xl font-semibold">{fmtRp(currentValue)}</p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Total Return</p>
-          <p className={`text-xl font-semibold ${totalReturn !== null && totalReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">Total Return</p>
+          <p className={`text-xl font-semibold ${totalReturn !== null && totalReturn >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
             {totalReturn !== null ? fmtPct(totalReturn) : '-'}
           </p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">XIRR (Annualized)</p>
-          <p className={`text-xl font-semibold ${xirrValue !== null && xirrValue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <p className="text-xs text-slate-600">XIRR (Annualized)</p>
+          <p className={`text-xl font-semibold ${xirrValue !== null && xirrValue >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
             {xirrValue !== null ? fmtPct(xirrValue) : '-'}
           </p>
         </div>
       </div>
 
       {securities.length === 0 && !loading ? (
-        <p className="text-sm text-amber-400 mb-4">
+        <p className="text-sm text-amber-600 mb-4">
           Belum ada akun sekuritas. Tambahkan dulu di halaman Sekuritas.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Sekuritas</label>
+              <label className="block text-xs text-slate-600 mb-1">Sekuritas</label>
               <select
                 value={securityId}
                 onChange={(e) => setSecurityId(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               >
                 {securities.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -151,37 +151,37 @@ export default function Investasi() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Tipe</label>
+              <label className="block text-xs text-slate-600 mb-1">Tipe</label>
               <select
                 value={tipe}
                 onChange={(e) => setTipe(e.target.value as CashFlowType)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               >
                 <option value="deposit">Setor</option>
                 <option value="withdraw">Tarik</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Tanggal</label>
+              <label className="block text-xs text-slate-600 mb-1">Tanggal</label>
               <input
                 type="date"
                 value={tanggal}
                 onChange={(e) => setTanggal(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Jumlah (Rp)</label>
+              <label className="block text-xs text-slate-600 mb-1">Jumlah (Rp)</label>
               <input
                 type="number"
                 value={jumlah}
                 onChange={(e) => setJumlah(e.target.value)}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
               />
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
@@ -193,15 +193,15 @@ export default function Investasi() {
         </form>
       )}
 
-      <h2 className="text-sm font-medium text-slate-300 mb-2">Riwayat Setoran/Penarikan</h2>
+      <h2 className="text-sm font-medium text-slate-700 mb-2">Riwayat Setoran/Penarikan</h2>
       {loading ? (
-        <p className="text-slate-400 text-sm">Memuat...</p>
+        <p className="text-slate-600 text-sm">Memuat...</p>
       ) : cashFlows.length === 0 ? (
-        <p className="text-slate-400 text-sm">Belum ada catatan.</p>
+        <p className="text-slate-600 text-sm">Belum ada catatan.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-slate-400 text-left">
+            <thead className="text-slate-600 text-left">
               <tr>
                 <th className="py-1 pr-2">Tanggal</th>
                 <th className="py-1 pr-2">Tipe</th>
@@ -212,15 +212,15 @@ export default function Investasi() {
             </thead>
             <tbody>
               {cashFlows.map((c) => (
-                <tr key={c.id} className="border-t border-slate-800">
+                <tr key={c.id} className="border-t border-slate-200">
                   <td className="py-1 pr-2">{c.tanggal}</td>
-                  <td className={`py-1 pr-2 ${c.tipe === 'deposit' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <td className={`py-1 pr-2 ${c.tipe === 'deposit' ? 'text-emerald-600' : 'text-red-600'}`}>
                     {c.tipe === 'deposit' ? 'Setor' : 'Tarik'}
                   </td>
                   <td className="py-1 pr-2">{fmtRp(c.jumlah)}</td>
                   <td className="py-1 pr-2">{securityName(c.security_id)}</td>
                   <td className="py-1">
-                    <button onClick={() => handleDelete(c.id)} className="text-red-400 hover:text-red-300">
+                    <button onClick={() => handleDelete(c.id)} className="text-red-600 hover:text-red-700">
                       Hapus
                     </button>
                   </td>

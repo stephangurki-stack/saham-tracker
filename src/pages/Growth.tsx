@@ -52,7 +52,7 @@ export default function Growth() {
       })
   }, [])
 
-  if (loading || loadingSnapshots) return <div className="p-4 text-slate-400 text-sm">Memuat...</div>
+  if (loading || loadingSnapshots) return <div className="p-4 text-slate-600 text-sm">Memuat...</div>
 
   const stockValue = holdingsGabungan
     .filter((h) => h.lot > 0)
@@ -92,30 +92,30 @@ export default function Growth() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <Link to="/" className="text-sm text-slate-400 hover:text-slate-200">
+      <Link to="/" className="text-sm text-slate-600 hover:text-slate-800">
         ← Dashboard
       </Link>
       <div>
         <h1 className="text-lg font-semibold">Riwayat Annual Growth</h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-400 mt-1">
           Growth% = Profit/Loss ÷ (Awal Aset + Top Up) — setoran modal baru tidak ikut dihitung sebagai performa
           investasi
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-slate-400 text-sm">
+        <p className="text-slate-600 text-sm">
           Belum ada data cukup untuk menghitung growth tahunan. Perlu nilai akhir tahun sebelumnya (isi manual di
           Dashboard, atau tunggu snapshot otomatis terkumpul di akhir tahun).
         </p>
       ) : (
         <div className="space-y-3">
           {rows.map((r) => (
-            <div key={r.year} className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <div key={r.year} className="bg-white border border-slate-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-300">
+                <p className="text-sm font-medium text-slate-700">
                   {r.year - 1} → {r.year}
-                  {r.fixed && <span className="text-xs text-slate-500 font-normal ml-2">dari Anual Report</span>}
+                  {r.fixed && <span className="text-xs text-slate-400 font-normal ml-2">dari Anual Report</span>}
                 </p>
                 {r.growthPct !== null ? (
                   <p
@@ -125,10 +125,10 @@ export default function Growth() {
                     {fmtPct(r.growthPct)}
                   </p>
                 ) : (
-                  <p className="text-sm text-slate-500">-</p>
+                  <p className="text-sm text-slate-400">-</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
                 <span>Awal Aset: {fmtRp(r.awalAset)}</span>
                 <span>Top Up: {fmtRp(r.topUp)}</span>
                 <span>Total Aset: {fmtRp(r.totalAset)}</span>
