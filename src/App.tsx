@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Growth from './pages/Growth'
 import Portfolio from './pages/Portfolio'
 import Transactions from './pages/Transactions'
 import Securities from './pages/Securities'
@@ -54,6 +55,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="growth" element={<Growth />} />
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="transaksi" element={<Transactions />} />
         <Route path="investasi" element={<Investasi />} />

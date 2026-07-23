@@ -198,7 +198,7 @@ export default function Dashboard() {
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-xs text-slate-400">Annual Growth</p>
           {growthYoY !== null ? (
-            <>
+            <Link to="/growth" className="block hover:opacity-80">
               <p className="text-lg font-semibold" style={{ color: growthYoY >= 0 ? STATUS.good : STATUS.critical }}>
                 {fmtPct(growthYoY)}
               </p>
@@ -206,7 +206,8 @@ export default function Dashboard() {
                 Awal {fmtRpCompact(lastYearSnapshot!.total)} + Top Up {fmtRpCompact(topUpThisYear)} · P/L{' '}
                 {fmtRpCompact(profitLossThisYear)}
               </p>
-            </>
+              <p className="text-xs text-blue-400 mt-1">Lihat riwayat →</p>
+            </Link>
           ) : (
             <div>
               <p className="text-xs text-slate-500 mb-1.5">Isi nilai akhir {currentYear - 1}</p>
