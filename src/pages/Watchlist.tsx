@@ -25,6 +25,11 @@ const methodLabels: Record<ValuationMethod, string> = {
   ddm: 'Dividend Discount Model',
 }
 
+// Sensible starting points for IDX blue-chip-ish assumptions — user edits from here
+// rather than typing from a blank field every time.
+const DCF_DEFAULTS = { growthRate: '0.08', discountRate: '0.1', terminalGrowth: '0.03' }
+const DDM_DEFAULTS = { growthRate: '0.05', discountRate: '0.1' }
+
 export default function Watchlist() {
   const { user } = useAuth()
   const { withMos, loading, error: loadError, refresh } = useWatchlistData()
@@ -47,6 +52,18 @@ export default function Watchlist() {
   const [nextDividend, setNextDividend] = useState('')
   const [ddmGrowthRate, setDdmGrowthRate] = useState('')
   const [ddmDiscountRate, setDdmDiscountRate] = useState('')
+
+  function handleMethodChange(m: ValuationMethod) {
+    setMethod(m)
+    if (m === 'dcf') {
+      if (!growthRate) setGrowthRate(DCF_DEFAULTS.growthRate)
+      if (!discountRate) setDiscountRate(DCF_DEFAULTS.discountRate)
+      if (!terminalGrowth) setTerminalGrowth(DCF_DEFAULTS.terminalGrowth)
+    } else if (m === 'ddm') {
+      if (!ddmGrowthRate) setDdmGrowthRate(DDM_DEFAULTS.growthRate)
+      if (!ddmDiscountRate) setDdmDiscountRate(DDM_DEFAULTS.discountRate)
+    }
+  }
 
   function resetForm() {
     setEditingId(null)
@@ -209,7 +226,7 @@ export default function Watchlist() {
             <label className="block text-xs text-slate-400 mb-1">Metode Valuasi</label>
             <select
               value={method}
-              onChange={(e) => setMethod(e.target.value as ValuationMethod)}
+              onChange={(e) => handleMethodChange(e.target.value as ValuationMethod)}
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
             >
               {(Object.keys(methodLabels) as ValuationMethod[]).map((m) => (
