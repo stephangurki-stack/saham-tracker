@@ -7,6 +7,7 @@ import type { Dividend, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
+const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
 
 export default function Dividen() {
@@ -416,9 +417,9 @@ export default function Dividen() {
                 {rekapPerSaham.map((r) => (
                   <tr key={r.ticker} className="border-t border-slate-800">
                     <td className="py-1 pr-2 font-medium">{r.ticker}</td>
-                    <td className="py-1 pr-2 text-right">{fmtRp(r.totalDiterima)}</td>
+                    <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
                     <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
-                    <td className="py-1 pr-2 text-right">{fmtRp(r.tahunIni)}</td>
+                    <td className="py-1 pr-2 text-right">{fmtNum(r.tahunIni)}</td>
                     <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
                   </tr>
                 ))}
@@ -447,8 +448,8 @@ export default function Dividen() {
                 return (
                   <tr key={year} className="border-t border-slate-800">
                     <td className="py-1 pr-2">{year}</td>
-                    <td className="py-1 pr-2 text-right">{fmtRp(perTahun.get(year)!)}</td>
-                    <td className="py-1 pr-2 text-right">{target ? fmtRp(target) : '-'}</td>
+                    <td className="py-1 pr-2 text-right">{fmtNum(perTahun.get(year)!)}</td>
+                    <td className="py-1 pr-2 text-right">{target ? fmtNum(target) : '-'}</td>
                     <td className={`py-1 text-right ${pct !== null && pct >= 1 ? 'text-emerald-400' : ''}`}>
                       {pct !== null ? fmtPct(pct) : '-'}
                     </td>
@@ -485,8 +486,8 @@ export default function Dividen() {
                   <td className="py-1 pr-2">{d.tanggal_bayar}</td>
                   <td className="py-1 pr-2 font-medium">{d.ticker}</td>
                   <td className="py-1 pr-2">{d.lot ?? '-'}</td>
-                  <td className="py-1 pr-2">{fmtRp(d.jumlah_per_lembar)}</td>
-                  <td className="py-1 pr-2">{fmtRp(d.total)}</td>
+                  <td className="py-1 pr-2">{fmtNum(d.jumlah_per_lembar)}</td>
+                  <td className="py-1 pr-2">{fmtNum(d.total)}</td>
                   <td className="py-1 pr-2">{securityName(d.security_id)}</td>
                   <td className="py-1 whitespace-nowrap">
                     <button onClick={() => startEdit(d)} className="text-blue-400 hover:text-blue-300 mr-3">
