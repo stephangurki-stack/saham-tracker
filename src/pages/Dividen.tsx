@@ -143,14 +143,26 @@ export default function Dividen() {
   }
   const tahunSorted = [...perTahun.keys()].sort((a, b) => b - a)
 
-  const perSaham = new Map<string, number>()
+  const perSahamTotal = new Map<string, number>()
+  const perSahamTahunIni = new Map<string, number>()
   for (const d of dividends) {
-    perSaham.set(d.ticker, (perSaham.get(d.ticker) ?? 0) + d.total)
+    perSahamTotal.set(d.ticker, (perSahamTotal.get(d.ticker) ?? 0) + d.total)
+    if (new Date(d.tanggal_bayar).getFullYear() === currentYear) {
+      perSahamTahunIni.set(d.ticker, (perSahamTahunIni.get(d.ticker) ?? 0) + d.total)
+    }
   }
-  const yieldOnCost = [...perSaham.entries()].map(([tk, totalDiterima]) => {
+  const rekapPerSaham = [...perSahamTotal.entries()].map(([tk, totalDiterima]) => {
     const holding = holdingsGabungan.find((h) => h.ticker === tk && h.lot > 0)
-    const yieldPct = holding && holding.costBasis > 0 ? totalDiterima / holding.costBasis : null
-    return { ticker: tk, totalDiterima, yieldPct }
+    const costBasis = holding && holding.costBasis > 0 ? holding.costBasis : null
+    const tahunIni = perSahamTahunIni.get(tk) ?? 0
+    return {
+      ticker: tk,
+      costBasis,
+      totalDiterima,
+      yieldTotalPct: costBasis ? totalDiterima / costBasis : null,
+      tahunIni,
+      yieldTahunIniPct: costBasis ? tahunIni / costBasis : null,
+    }
   })
 
   return (
@@ -263,27 +275,36 @@ export default function Dividen() {
         </form>
       )}
 
-      {yieldOnCost.length > 0 && (
+      {rekapPerSaham.length > 0 && (
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-slate-300 mb-2">Dividend Yield on Cost per Saham</p>
-          <table className="w-full text-sm">
-            <thead className="text-slate-400 text-left">
-              <tr>
-                <th className="py-1 pr-2">Ticker</th>
-                <th className="py-1 pr-2">Total Diterima</th>
-                <th className="py-1">Yield on Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {yieldOnCost.map((y) => (
-                <tr key={y.ticker} className="border-t border-slate-800">
-                  <td className="py-1 pr-2 font-medium">{y.ticker}</td>
-                  <td className="py-1 pr-2">{fmtRp(y.totalDiterima)}</td>
-                  <td className="py-1">{y.yieldPct !== null ? fmtPct(y.yieldPct) : '-'}</td>
+          <p className="text-sm font-medium text-slate-300 mb-1">Rekap Dividen per Saham</p>
+          <p className="text-xs text-slate-500 mb-2">
+            Yield dihitung terhadap cost basis (modal tertanam) saham tersebut saat ini
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-slate-400 text-left">
+                <tr>
+                  <th className="py-1 pr-2">Ticker</th>
+                  <th className="py-1 pr-2 text-right">Total Dividen</th>
+                  <th className="py-1 pr-2 text-right">Yield (Total)</th>
+                  <th className="py-1 pr-2 text-right">Dividen {currentYear}</th>
+                  <th className="py-1 text-right">Yield ({currentYear})</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rekapPerSaham.map((r) => (
+                  <tr key={r.ticker} className="border-t border-slate-800">
+                    <td className="py-1 pr-2 font-medium">{r.ticker}</td>
+                    <td className="py-1 pr-2 text-right">{fmtRp(r.totalDiterima)}</td>
+                    <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
+                    <td className="py-1 pr-2 text-right">{fmtRp(r.tahunIni)}</td>
+                    <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
