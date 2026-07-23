@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { useWatchlistData } from '../hooks/useWatchlistData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { marketValue, portfolioWeights, unrealizedGain, unrealizedGainPct } from '../lib/portfolio'
 import { marginOfSafety } from '../lib/valuation'
 import type { Holding } from '../lib/types'
 
-const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
 function HoldingsTable({
@@ -17,6 +17,8 @@ function HoldingsTable({
   prices: Record<string, number>
   fairValues: Record<string, number>
 }) {
+  const { hidden } = usePrivacyMode()
+  const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
   const held = holdings.filter((h) => h.lot > 0)
   const weights = portfolioWeights(held, prices)
 
@@ -88,6 +90,8 @@ export default function Portfolio() {
     refresh,
   } = usePortfolioData()
   const { rows: watchlistRows } = useWatchlistData()
+  const { hidden } = usePrivacyMode()
+  const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
   const [tab, setTab] = useState<string>('gabungan')
 
   const fairValues: Record<string, number> = Object.fromEntries(

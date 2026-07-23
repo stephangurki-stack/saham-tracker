@@ -1,12 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import type { Security, Transaction, TransactionType } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
 export default function Transactions() {
   const { user } = useAuth()
+  const { hidden } = usePrivacyMode()
+  const fmtNum = (n: number) => (hidden ? '••••••' : n.toLocaleString('id-ID'))
   const [securities, setSecurities] = useState<Security[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -224,7 +227,7 @@ export default function Transactions() {
                   <td className={`py-1 pr-2 ${tx.tipe === 'buy' ? 'text-emerald-600' : 'text-red-600'}`}>
                     {tx.tipe === 'buy' ? 'Beli' : 'Jual'}
                   </td>
-                  <td className="py-1 pr-2">{tx.harga.toLocaleString('id-ID')}</td>
+                  <td className="py-1 pr-2">{fmtNum(tx.harga)}</td>
                   <td className="py-1 pr-2">{tx.lot}</td>
                   <td className="py-1 pr-2">{securityName(tx.security_id)}</td>
                   <td className="py-1">

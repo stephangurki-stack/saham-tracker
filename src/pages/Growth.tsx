@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { marketValue } from '../lib/portfolio'
 import { STATUS } from '../lib/chartColors'
 import type { PortfolioSnapshot } from '../lib/types'
 
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%'
 
 interface YearlyGrowth {
@@ -39,6 +39,8 @@ const HISTORICAL_GROWTH: YearlyGrowth[] = [
 
 export default function Growth() {
   const { holdingsGabungan, cashFlows, prices, cashBalance, loading } = usePortfolioData()
+  const { hidden } = usePrivacyMode()
+  const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([])
   const [loadingSnapshots, setLoadingSnapshots] = useState(true)
 

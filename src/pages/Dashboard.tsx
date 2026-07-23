@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { useWatchlistData } from '../hooks/useWatchlistData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { computeCostBasisTimeline, marketValue } from '../lib/portfolio'
 import { BUY_THRESHOLD_MOS } from '../lib/valuation'
 import { CATEGORICAL, CHART_SURFACE, GRIDLINE, OTHER_SLICE, STATUS, TEXT_SECONDARY } from '../lib/chartColors'
@@ -12,12 +13,6 @@ import type { PortfolioSnapshot } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
-const fmtRpCompact = (n: number) => {
-  if (Math.abs(n) >= 1e9) return 'Rp ' + (n / 1e9).toFixed(1) + 'M'
-  if (Math.abs(n) >= 1e6) return 'Rp ' + (n / 1e6).toFixed(1) + 'jt'
-  return fmtRp(n)
-}
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Dashboard() {
@@ -25,6 +20,15 @@ export default function Dashboard() {
   const { holdingsGabungan, transactions, cashFlows, prices, quotes, cashBalance, loading, error } =
     usePortfolioData()
   const { withMos: watchlistWithMos } = useWatchlistData()
+  const { hidden } = usePrivacyMode()
+
+  const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
+  const fmtRpCompact = (n: number) => {
+    if (hidden) return 'Rp ••••••'
+    if (Math.abs(n) >= 1e9) return 'Rp ' + (n / 1e9).toFixed(1) + 'M'
+    if (Math.abs(n) >= 1e6) return 'Rp ' + (n / 1e6).toFixed(1) + 'jt'
+    return fmtRp(n)
+  }
 
   const held = holdingsGabungan.filter((h) => h.lot > 0)
   const ownedTickers = new Set(held.map((h) => h.ticker))

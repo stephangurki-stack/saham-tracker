@@ -2,16 +2,18 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { LOT_SIZE } from '../lib/portfolio'
 import type { Dividend, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
-const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
 
 export default function Dividen() {
   const { user } = useAuth()
   const { holdingsGabungan, holdingsBySecurity } = usePortfolioData()
+  const { hidden } = usePrivacyMode()
+  const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
 
   const [securities, setSecurities] = useState<Security[]>([])
   const [dividends, setDividends] = useState<Dividend[]>([])

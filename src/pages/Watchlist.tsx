@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { useWatchlistData } from '../hooks/useWatchlistData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import {
   BUY_THRESHOLD_MOS,
   computeFairValue,
@@ -15,7 +16,6 @@ import {
 } from '../lib/valuation'
 import type { WatchlistRow } from '../lib/types'
 
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 const methodLabels: Record<ValuationMethod, string> = {
@@ -34,6 +34,8 @@ export default function Watchlist() {
   const { user } = useAuth()
   const { withMos, loading, error: loadError, refresh } = useWatchlistData()
   const { holdingsGabungan } = usePortfolioData()
+  const { hidden } = usePrivacyMode()
+  const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
   const ownedTickers = new Set(holdingsGabungan.filter((h) => h.lot > 0).map((h) => h.ticker))
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)

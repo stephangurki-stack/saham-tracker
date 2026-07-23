@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { PrivacyProvider } from './hooks/usePrivacyMode'
 import { useAppLock } from './hooks/useAppLock'
 import Layout from './components/Layout'
 import LockScreen from './components/LockScreen'
@@ -76,7 +77,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <PrivacyProvider>
+          <AppRoutes />
+        </PrivacyProvider>
       </AuthProvider>
     </BrowserRouter>
   )

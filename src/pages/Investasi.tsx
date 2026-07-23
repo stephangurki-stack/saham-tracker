@@ -2,17 +2,19 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { marketValue } from '../lib/portfolio'
 import { xirr } from '../lib/xirr'
 import type { CashFlow, CashFlowType, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Investasi() {
   const { user } = useAuth()
   const { holdingsGabungan, prices } = usePortfolioData()
+  const { hidden } = usePrivacyMode()
+  const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
 
   const [securities, setSecurities] = useState<Security[]>([])
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([])
