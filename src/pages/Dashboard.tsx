@@ -1,10 +1,16 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { useWatchlistData } from '../hooks/useWatchlistData'
 import { computeCostBasisTimeline, marketValue } from '../lib/portfolio'
 import { BUY_THRESHOLD_MOS } from '../lib/valuation'
 import { CATEGORICAL, CHART_SURFACE, GRIDLINE, OTHER_SLICE, STATUS, TEXT_SECONDARY } from '../lib/chartColors'
+import type { PortfolioSnapshot } from '../lib/types'
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
 
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtRpCompact = (n: number) => {
@@ -15,7 +21,9 @@ const fmtRpCompact = (n: number) => {
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Dashboard() {
-  const { holdingsGabungan, transactions, prices, quotes, cashBalance, loading, error } = usePortfolioData()
+  const { user } = useAuth()
+  const { holdingsGabungan, transactions, cashFlows, prices, quotes, cashBalance, loading, error } =
+    usePortfolioData()
   const { withMos: watchlistWithMos } = useWatchlistData()
 
   const held = holdingsGabungan.filter((h) => h.lot > 0)
@@ -28,6 +36,66 @@ export default function Dashboard() {
   const totalGain = stockValue - totalCost
   const totalGainPct = totalCost > 0 ? totalGain / totalCost : 0
   const portfolioValue = stockValue + cashBalance
+
+  const netDeposited = cashFlows.reduce(
+    (sum, c) => sum + (c.tipe === 'deposit' ? c.jumlah : -c.jumlah),
+    0
+  )
+  const growthSinceInception = netDeposited > 0 ? (portfolioValue - netDeposited) / netDeposited : null
+
+  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([])
+  const [lastYearInput, setLastYearInput] = useState('')
+  const [savingLastYear, setSavingLastYear] = useState(false)
+  const snapshotUpserted = useRef(false)
+
+  async function loadSnapshots() {
+    const { data } = await supabase.from('portfolio_snapshots').select('*')
+    setSnapshots((data ?? []) as PortfolioSnapshot[])
+  }
+
+  useEffect(() => {
+    loadSnapshots()
+  }, [])
+
+  // Record today's value once per Dashboard visit (upsert = 1 row/day), after
+  // holdings/prices have finished loading so we don't snapshot a zero value.
+  useEffect(() => {
+    if (loading || !user || snapshotUpserted.current) return
+    snapshotUpserted.current = true
+    supabase
+      .from('portfolio_snapshots')
+      .upsert(
+        {
+          user_id: user.id,
+          tanggal: todayISO(),
+          nilai_saham: stockValue,
+          nilai_kas: cashBalance,
+          total: portfolioValue,
+        },
+        { onConflict: 'user_id,tanggal' }
+      )
+      .then(() => loadSnapshots())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, stockValue, cashBalance, portfolioValue])
+
+  const currentYear = new Date().getFullYear()
+  const lastYearSnapshot = snapshots
+    .filter((s) => new Date(s.tanggal).getFullYear() === currentYear - 1)
+    .sort((a, b) => b.tanggal.localeCompare(a.tanggal))[0]
+  const growthYoY = lastYearSnapshot ? (portfolioValue - lastYearSnapshot.total) / lastYearSnapshot.total : null
+
+  async function handleSaveLastYear() {
+    const value = Number(lastYearInput)
+    if (!value || !user) return
+    setSavingLastYear(true)
+    await supabase.from('portfolio_snapshots').upsert(
+      { user_id: user.id, tanggal: `${currentYear - 1}-12-31`, total: value },
+      { onConflict: 'user_id,tanggal' }
+    )
+    setLastYearInput('')
+    await loadSnapshots()
+    setSavingLastYear(false)
+  }
 
   const pieData = (() => {
     const withValue = held
@@ -95,6 +163,60 @@ export default function Dashboard() {
           <p className="text-xs mt-0.5" style={{ color: totalGain >= 0 ? STATUS.good : STATUS.critical }}>
             {fmtPct(totalGainPct)}
           </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-xs text-slate-400">Growth (sejak awal)</p>
+          {growthSinceInception !== null ? (
+            <>
+              <p
+                className="text-lg font-semibold"
+                style={{ color: growthSinceInception >= 0 ? STATUS.good : STATUS.critical }}
+              >
+                {fmtPct(growthSinceInception)}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Modal {fmtRpCompact(netDeposited)} → Kini {fmtRpCompact(portfolioValue)}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 mt-1">Belum ada setoran tercatat</p>
+          )}
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+          <p className="text-xs text-slate-400">Growth {currentYear - 1} → {currentYear}</p>
+          {growthYoY !== null ? (
+            <>
+              <p className="text-lg font-semibold" style={{ color: growthYoY >= 0 ? STATUS.good : STATUS.critical }}>
+                {fmtPct(growthYoY)}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Akhir {currentYear - 1}: {fmtRpCompact(lastYearSnapshot!.total)}
+              </p>
+            </>
+          ) : (
+            <div>
+              <p className="text-xs text-slate-500 mb-1.5">Isi nilai akhir {currentYear - 1}</p>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  value={lastYearInput}
+                  onChange={(e) => setLastYearInput(e.target.value)}
+                  placeholder="Rp"
+                  className="w-full min-w-0 rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-xs text-slate-100"
+                />
+                <button
+                  onClick={handleSaveLastYear}
+                  disabled={savingLastYear}
+                  className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs px-2 py-1 whitespace-nowrap"
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

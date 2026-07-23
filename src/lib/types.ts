@@ -71,6 +71,16 @@ export interface WatchlistRow {
   tanggal_update: string
 }
 
+export interface PortfolioSnapshot {
+  id: string
+  user_id: string
+  tanggal: string
+  nilai_saham: number | null
+  nilai_kas: number | null
+  total: number
+  created_at: string
+}
+
 export interface DividendTarget {
   id: string
   user_id: string
