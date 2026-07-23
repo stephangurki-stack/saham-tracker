@@ -169,6 +169,15 @@ export default function Watchlist() {
     return { method, asumsi: a }
   }
 
+  function hasRequiredInputs(): boolean {
+    if (method === 'graham') return !!eps && !!bvps
+    if (method === 'per_pbv') return !!targetMultiple && (basis === 'per' ? !!eps : !!bvps)
+    if (method === 'dcf') return !!fcf && !!growthRate && !!discountRate && !!terminalGrowth
+    return !!nextDividend && !!ddmDiscountRate && !!ddmGrowthRate
+  }
+
+  const livePreview = hasRequiredInputs() ? computeFairValue(buildAssumptions()!) : null
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
@@ -356,6 +365,13 @@ export default function Watchlist() {
             </div>
           </div>
         )}
+
+        <div className="bg-slate-800/60 border border-slate-700 rounded-md px-3 py-2">
+          <p className="text-xs text-slate-400">Nilai Wajar (preview)</p>
+          <p className="text-lg font-semibold">
+            {livePreview !== null ? fmtRp(livePreview) : hasRequiredInputs() ? 'Input tidak valid' : '-'}
+          </p>
+        </div>
 
         {(error || loadError) && <p className="text-sm text-red-400">{error ?? loadError}</p>}
 
