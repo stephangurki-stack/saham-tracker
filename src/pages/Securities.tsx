@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { exportAllDataToExcel } from '../lib/exportData'
 import type { Security } from '../lib/types'
 
 export default function Securities() {
@@ -9,6 +10,19 @@ export default function Securities() {
   const [nama, setNama] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  async function handleExport() {
+    setExporting(true)
+    setExportError(null)
+    try {
+      await exportAllDataToExcel()
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Gagal membuat file backup.')
+    }
+    setExporting(false)
+  }
 
   async function load() {
     setLoading(true)
@@ -83,6 +97,22 @@ export default function Securities() {
           ))}
         </ul>
       )}
+
+      <div className="mt-8 bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <p className="text-sm font-medium text-slate-300 mb-1">Backup Data</p>
+        <p className="text-xs text-slate-500 mb-3">
+          Unduh seluruh data Anda (sekuritas, transaksi, investasi, dividen, watchlist, analisa) sebagai satu file
+          Excel dengan satu sheet per jenis data.
+        </p>
+        {exportError && <p className="text-sm text-red-400 mb-2">{exportError}</p>}
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm px-4 py-2"
+        >
+          {exporting ? 'Menyiapkan file...' : 'Export ke Excel'}
+        </button>
+      </div>
     </div>
   )
 }
