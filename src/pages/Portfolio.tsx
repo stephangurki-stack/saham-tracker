@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { useWatchlistData } from '../hooks/useWatchlistData'
 import { marketValue, portfolioWeights, unrealizedGain, unrealizedGainPct } from '../lib/portfolio'
+import { marginOfSafety } from '../lib/valuation'
 import type { Holding } from '../lib/types'
 
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
-function HoldingsTable({ holdings, prices }: { holdings: Holding[]; prices: Record<string, number> }) {
+function HoldingsTable({
+  holdings,
+  prices,
+  fairValues,
+}: {
+  holdings: Holding[]
+  prices: Record<string, number>
+  fairValues: Record<string, number>
+}) {
   const held = holdings.filter((h) => h.lot > 0)
   const weights = portfolioWeights(held, prices)
 
@@ -23,9 +33,11 @@ function HoldingsTable({ holdings, prices }: { holdings: Holding[]; prices: Reco
             <th className="py-1 pr-3">Lot</th>
             <th className="py-1 pr-3">Avg Buy</th>
             <th className="py-1 pr-3">Harga Now</th>
+            <th className="py-1 pr-3">Nilai Sekarang</th>
             <th className="py-1 pr-3">Unrealized P/L</th>
             <th className="py-1 pr-3">%</th>
-            <th className="py-1">Bobot</th>
+            <th className="py-1 pr-3">Bobot</th>
+            <th className="py-1">vs Nilai Wajar</th>
           </tr>
         </thead>
         <tbody>
@@ -34,19 +46,26 @@ function HoldingsTable({ holdings, prices }: { holdings: Holding[]; prices: Reco
             const gain = unrealizedGain(h, price)
             const gainPct = unrealizedGainPct(h, price)
             const weight = weights.get(h.ticker) ?? 0
+            const value = marketValue(h, price)
+            const fairValue = fairValues[h.ticker]
+            const mos = fairValue && price ? marginOfSafety(fairValue, price) : null
             return (
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-800">
                 <td className="py-1 pr-3 font-medium">{h.ticker}</td>
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtRp(h.avgBuyPrice)}</td>
                 <td className="py-1 pr-3">{price ? fmtRp(price) : '-'}</td>
+                <td className="py-1 pr-3">{price ? fmtRp(value) : '-'}</td>
                 <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {fmtRp(gain)}
                 </td>
                 <td className={`py-1 pr-3 ${gainPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {fmtPct(gainPct)}
                 </td>
-                <td className="py-1">{fmtPct(weight)}</td>
+                <td className="py-1 pr-3">{fmtPct(weight)}</td>
+                <td className={`py-1 ${mos === null ? 'text-slate-500' : mos >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {mos !== null ? (mos >= 0 ? '+' : '') + fmtPct(mos) : 'Belum ada'}
+                </td>
               </tr>
             )
           })}
@@ -58,7 +77,12 @@ function HoldingsTable({ holdings, prices }: { holdings: Holding[]; prices: Reco
 
 export default function Portfolio() {
   const { securities, holdingsBySecurity, holdingsGabungan, prices, loading, error, refresh } = usePortfolioData()
+  const { rows: watchlistRows } = useWatchlistData()
   const [tab, setTab] = useState<string>('gabungan')
+
+  const fairValues: Record<string, number> = Object.fromEntries(
+    watchlistRows.filter((r) => r.nilai_wajar !== null).map((r) => [r.ticker, r.nilai_wajar as number])
+  )
 
   const totalValue = holdingsGabungan
     .filter((h) => h.lot > 0)
@@ -111,11 +135,12 @@ export default function Portfolio() {
       {loading ? (
         <p className="text-slate-400 text-sm">Memuat...</p>
       ) : tab === 'gabungan' ? (
-        <HoldingsTable holdings={holdingsGabungan} prices={prices} />
+        <HoldingsTable holdings={holdingsGabungan} prices={prices} fairValues={fairValues} />
       ) : (
         <HoldingsTable
           holdings={holdingsBySecurity.filter((h) => h.security_id === tab)}
           prices={prices}
+          fairValues={fairValues}
         />
       )}
     </div>
