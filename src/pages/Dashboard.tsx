@@ -190,6 +190,12 @@ export default function Dashboard() {
               <p className="text-xs text-slate-500 mt-0.5">
                 Modal {fmtRpCompact(netDeposited)} → Kini {fmtRpCompact(portfolioValue)}
               </p>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: portfolioValue - netDeposited >= 0 ? STATUS.good : STATUS.critical }}
+              >
+                Profit/Loss: {fmtRp(portfolioValue - netDeposited)}
+              </p>
             </>
           ) : (
             <p className="text-sm text-slate-500 mt-1">Belum ada setoran tercatat</p>
