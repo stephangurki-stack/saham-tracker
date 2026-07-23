@@ -82,7 +82,17 @@ export default function Dashboard() {
   const lastYearSnapshot = snapshots
     .filter((s) => new Date(s.tanggal).getFullYear() === currentYear - 1)
     .sort((a, b) => b.tanggal.localeCompare(a.tanggal))[0]
-  const growthYoY = lastYearSnapshot ? (portfolioValue - lastYearSnapshot.total) / lastYearSnapshot.total : null
+
+  // Matches the "Anual Report" sheet's Anual Progress formula: Profit/Loss ÷
+  // (Awal Aset + Top Up), which excludes new deposits from the growth % so it
+  // measures actual investment performance rather than capital added.
+  const topUpThisYear = cashFlows
+    .filter((c) => new Date(c.tanggal).getFullYear() === currentYear)
+    .reduce((sum, c) => sum + (c.tipe === 'deposit' ? c.jumlah : -c.jumlah), 0)
+  const awalAsetPlusTopUp = lastYearSnapshot ? lastYearSnapshot.total + topUpThisYear : 0
+  const profitLossThisYear = lastYearSnapshot ? portfolioValue - lastYearSnapshot.total - topUpThisYear : 0
+  const growthYoY =
+    lastYearSnapshot && awalAsetPlusTopUp > 0 ? profitLossThisYear / awalAsetPlusTopUp : null
 
   async function handleSaveLastYear() {
     const value = Number(lastYearInput)
@@ -193,7 +203,8 @@ export default function Dashboard() {
                 {fmtPct(growthYoY)}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Akhir {currentYear - 1}: {fmtRpCompact(lastYearSnapshot!.total)}
+                Awal {fmtRpCompact(lastYearSnapshot!.total)} + Top Up {fmtRpCompact(topUpThisYear)} · P/L{' '}
+                {fmtRpCompact(profitLossThisYear)}
               </p>
             </>
           ) : (
