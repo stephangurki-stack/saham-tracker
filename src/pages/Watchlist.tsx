@@ -38,6 +38,8 @@ export default function Watchlist() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [fetchingFundamentals, setFetchingFundamentals] = useState(false)
+  const [fundamentalsNote, setFundamentalsNote] = useState<string | null>(null)
 
   const [ticker, setTicker] = useState('')
   const [method, setMethod] = useState<ValuationMethod>('graham')
@@ -52,6 +54,31 @@ export default function Watchlist() {
   const [nextDividend, setNextDividend] = useState('')
   const [ddmGrowthRate, setDdmGrowthRate] = useState('')
   const [ddmDiscountRate, setDdmDiscountRate] = useState('')
+
+  async function handleFetchFundamentals() {
+    const tickerUpper = ticker.trim().toUpperCase()
+    if (!tickerUpper) {
+      setFundamentalsNote('Isi ticker dulu.')
+      return
+    }
+    setFetchingFundamentals(true)
+    setFundamentalsNote(null)
+    try {
+      const res = await fetch(`/api/fundamentals?ticker=${encodeURIComponent(tickerUpper)}`)
+      if (!res.ok) throw new Error('unavailable')
+      const data = await res.json()
+      if (data.eps !== null) setEps(String(data.eps))
+      if (data.bvps !== null) setBvps(String(data.bvps))
+      setFundamentalsNote(
+        data.eps !== null || data.bvps !== null
+          ? 'Terisi dari Yahoo Finance — cek ulang sebelum simpan.'
+          : 'Data tidak tersedia, isi manual.'
+      )
+    } catch {
+      setFundamentalsNote('Tidak bisa mengambil data otomatis, isi manual.')
+    }
+    setFetchingFundamentals(false)
+  }
 
   function handleMethodChange(m: ValuationMethod) {
     setMethod(m)
@@ -237,6 +264,20 @@ export default function Watchlist() {
             </select>
           </div>
         </div>
+
+        {(method === 'graham' || method === 'per_pbv') && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleFetchFundamentals}
+              disabled={fetchingFundamentals}
+              className="text-xs rounded-md bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 px-2.5 py-1.5 border border-slate-700"
+            >
+              {fetchingFundamentals ? 'Mengambil...' : 'Ambil EPS/BVPS dari Yahoo Finance'}
+            </button>
+            {fundamentalsNote && <span className="text-xs text-slate-500">{fundamentalsNote}</span>}
+          </div>
+        )}
 
         {method === 'graham' && (
           <div className="grid grid-cols-2 gap-3">

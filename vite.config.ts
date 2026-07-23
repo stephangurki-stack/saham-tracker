@@ -5,9 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 /**
  * `vite dev` doesn't serve /api routes (that's Vercel's job in production).
- * This plugin emulates the Edge Function locally so /api/prices works during
- * `npm run dev`, by adapting Vite's Connect middleware req/res to the Web
- * Request/Response signature the handler exports.
+ * This plugin emulates the Edge Functions locally during `npm run dev`, by
+ * adapting Vite's Connect middleware req/res to the Web Request/Response
+ * signature each handler under api/*.ts exports, routed by path segment
+ * (/api/prices -> api/prices.ts, /api/fundamentals -> api/fundamentals.ts).
  */
 function apiDevMiddleware(env: Record<string, string>): Plugin {
   return {
@@ -19,7 +20,8 @@ function apiDevMiddleware(env: Record<string, string>): Plugin {
         process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL
         process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY
 
-        const mod = await server.ssrLoadModule('/api/prices.ts')
+        const routeName = req.url.split('?')[0].replace('/api/', '')
+        const mod = await server.ssrLoadModule(`/api/${routeName}.ts`)
         const webReq = new Request(`http://localhost${req.url}`, { method: req.method })
         const webRes: Response = await mod.default(webReq)
         res.statusCode = webRes.status
