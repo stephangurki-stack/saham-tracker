@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
+import { LOT_SIZE } from '../lib/portfolio'
 import type { Dividend, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -10,7 +11,7 @@ const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
 
 export default function Dividen() {
   const { user } = useAuth()
-  const { holdingsGabungan } = usePortfolioData()
+  const { holdingsGabungan, holdingsBySecurity } = usePortfolioData()
 
   const [securities, setSecurities] = useState<Security[]>([])
   const [dividends, setDividends] = useState<Dividend[]>([])
@@ -25,7 +26,46 @@ export default function Dividen() {
   const [ticker, setTicker] = useState('')
   const [tanggalBayar, setTanggalBayar] = useState(todayISO())
   const [jumlahPerLembar, setJumlahPerLembar] = useState('')
+  const [lot, setLot] = useState('')
   const [total, setTotal] = useState('')
+
+  const heldForSecurity = holdingsBySecurity.filter((h) => h.security_id === securityId && h.lot > 0)
+
+  function handleSecurityChange(id: string) {
+    setSecurityId(id)
+    const held = holdingsBySecurity.filter((h) => h.security_id === id && h.lot > 0)
+    if (held.length > 0) {
+      setTicker(held[0].ticker)
+      setLot(String(held[0].lot))
+    } else {
+      setTicker('')
+      setLot('')
+    }
+  }
+
+  function handleTickerChange(tk: string) {
+    setTicker(tk)
+    const held = heldForSecurity.find((h) => h.ticker === tk)
+    if (held) setLot(String(held.lot))
+  }
+
+  function recalcTotal(perLembarStr: string, lotStr: string) {
+    const perLembarNum = Number(perLembarStr)
+    const lotNum = Number(lotStr)
+    if (perLembarNum > 0 && lotNum > 0) {
+      setTotal(String(Math.round(perLembarNum * lotNum * LOT_SIZE)))
+    }
+  }
+
+  function handlePerLembarChange(value: string) {
+    setJumlahPerLembar(value)
+    recalcTotal(value, lot)
+  }
+
+  function handleLotChange(value: string) {
+    setLot(value)
+    recalcTotal(jumlahPerLembar, value)
+  }
 
   async function load() {
     setLoading(true)
@@ -55,6 +95,18 @@ export default function Dividen() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Default ticker/lot to the first held position once securities & holdings are ready.
+  useEffect(() => {
+    if (!ticker && securityId) {
+      const held = holdingsBySecurity.filter((h) => h.security_id === securityId && h.lot > 0)
+      if (held.length > 0) {
+        setTicker(held[0].ticker)
+        setLot(String(held[0].lot))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [securityId, holdingsBySecurity])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -86,6 +138,7 @@ export default function Dividen() {
       ticker: tickerUpper,
       tanggal_bayar: tanggalBayar,
       jumlah_per_lembar: perLembarNum,
+      lot: lot ? Number(lot) : null,
       total: totalNum,
     })
 
@@ -93,6 +146,7 @@ export default function Dividen() {
     else {
       setTicker('')
       setJumlahPerLembar('')
+      setLot('')
       setTotal('')
       load()
     }
@@ -215,7 +269,7 @@ export default function Dividen() {
               <label className="block text-xs text-slate-400 mb-1">Sekuritas</label>
               <select
                 value={securityId}
-                onChange={(e) => setSecurityId(e.target.value)}
+                onChange={(e) => handleSecurityChange(e.target.value)}
                 className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
               >
                 {securities.map((s) => (
@@ -227,12 +281,37 @@ export default function Dividen() {
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">Ticker</label>
-              <input
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-                placeholder="BBCA"
-                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
-              />
+              {heldForSecurity.length > 0 ? (
+                <select
+                  value={heldForSecurity.some((h) => h.ticker === ticker) ? ticker : '__manual__'}
+                  onChange={(e) =>
+                    e.target.value === '__manual__' ? setTicker('') : handleTickerChange(e.target.value)
+                  }
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+                >
+                  {heldForSecurity.map((h) => (
+                    <option key={h.ticker} value={h.ticker}>
+                      {h.ticker} ({h.lot} lot)
+                    </option>
+                  ))}
+                  <option value="__manual__">Ticker lain (ketik manual)</option>
+                </select>
+              ) : (
+                <input
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value)}
+                  placeholder="BBCA"
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+                />
+              )}
+              {heldForSecurity.length > 0 && !heldForSecurity.some((h) => h.ticker === ticker) && (
+                <input
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value)}
+                  placeholder="Ketik ticker"
+                  className="w-full mt-2 rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100 uppercase"
+                />
+              )}
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">Tanggal Bayar</label>
@@ -244,11 +323,20 @@ export default function Dividen() {
               />
             </div>
             <div>
+              <label className="block text-xs text-slate-400 mb-1">Lot</label>
+              <input
+                type="number"
+                value={lot}
+                onChange={(e) => handleLotChange(e.target.value)}
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
+              />
+            </div>
+            <div>
               <label className="block text-xs text-slate-400 mb-1">Rp / Lembar</label>
               <input
                 type="number"
                 value={jumlahPerLembar}
-                onChange={(e) => setJumlahPerLembar(e.target.value)}
+                onChange={(e) => handlePerLembarChange(e.target.value)}
                 className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
               />
             </div>
@@ -260,6 +348,7 @@ export default function Dividen() {
                 onChange={(e) => setTotal(e.target.value)}
                 className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-2 text-sm text-slate-100"
               />
+              <p className="text-xs text-slate-500 mt-1">Auto dari Lot × Rp/Lembar, bisa diedit (mis. setelah pajak)</p>
             </div>
           </div>
 
@@ -352,6 +441,7 @@ export default function Dividen() {
               <tr>
                 <th className="py-1 pr-2">Tanggal Bayar</th>
                 <th className="py-1 pr-2">Ticker</th>
+                <th className="py-1 pr-2">Lot</th>
                 <th className="py-1 pr-2">Rp/Lembar</th>
                 <th className="py-1 pr-2">Total</th>
                 <th className="py-1 pr-2">Sekuritas</th>
@@ -363,6 +453,7 @@ export default function Dividen() {
                 <tr key={d.id} className="border-t border-slate-800">
                   <td className="py-1 pr-2">{d.tanggal_bayar}</td>
                   <td className="py-1 pr-2 font-medium">{d.ticker}</td>
+                  <td className="py-1 pr-2">{d.lot ?? '-'}</td>
                   <td className="py-1 pr-2">{fmtRp(d.jumlah_per_lembar)}</td>
                   <td className="py-1 pr-2">{fmtRp(d.total)}</td>
                   <td className="py-1 pr-2">{securityName(d.security_id)}</td>

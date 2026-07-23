@@ -56,6 +56,7 @@ export interface Dividend {
   ex_date: string | null
   tanggal_bayar: string
   jumlah_per_lembar: number
+  lot: number | null
   total: number
   created_at: string
 }
