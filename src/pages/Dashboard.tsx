@@ -196,7 +196,7 @@ export default function Dashboard() {
           )}
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <p className="text-xs text-slate-400">Growth {currentYear - 1} → {currentYear}</p>
+          <p className="text-xs text-slate-400">Annual Growth</p>
           {growthYoY !== null ? (
             <>
               <p className="text-lg font-semibold" style={{ color: growthYoY >= 0 ? STATUS.good : STATUS.critical }}>
