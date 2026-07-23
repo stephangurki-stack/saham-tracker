@@ -5,7 +5,6 @@ import { marketValue, portfolioWeights, unrealizedGain, unrealizedGainPct } from
 import { marginOfSafety } from '../lib/valuation'
 import type { Holding } from '../lib/types'
 
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
@@ -107,28 +106,29 @@ export default function Portfolio() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-lg font-semibold">Portofolio</h1>
         <button onClick={refresh} className="text-sm text-blue-400 hover:text-blue-300">
           Refresh harga
         </button>
       </div>
+      <p className="text-xs text-slate-500 mb-4">Semua nilai dalam Rupiah (Rp)</p>
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
         <p className="text-xs text-slate-400">Total Nilai Portofolio</p>
-        <p className="text-2xl font-semibold">{fmtRp(totalValue)}</p>
+        <p className="text-2xl font-semibold">{fmtNum(totalValue)}</p>
         <p className={`text-sm mt-1 mb-3 ${totalGain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {totalGain >= 0 ? '+' : ''}
-          {fmtRp(totalGain)} unrealized
+          {fmtNum(totalGain)} unrealized
         </p>
         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
           <div>
             <p className="text-xs text-slate-400">Nilai Saham</p>
-            <p className="text-base font-medium">{fmtRp(stockValue)}</p>
+            <p className="text-base font-medium">{fmtNum(stockValue)}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400">Kas</p>
-            <p className={`text-base font-medium ${cashForTab < 0 ? 'text-red-400' : ''}`}>{fmtRp(cashForTab)}</p>
+            <p className={`text-base font-medium ${cashForTab < 0 ? 'text-red-400' : ''}`}>{fmtNum(cashForTab)}</p>
           </div>
         </div>
       </div>

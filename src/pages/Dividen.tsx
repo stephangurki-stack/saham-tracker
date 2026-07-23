@@ -6,7 +6,6 @@ import { LOT_SIZE } from '../lib/portfolio'
 import type { Dividend, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
-const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
 const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
 
@@ -245,17 +244,18 @@ export default function Dividen() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-lg font-semibold mb-4">Dividen</h1>
+      <h1 className="text-lg font-semibold mb-1">Dividen</h1>
+      <p className="text-xs text-slate-500 mb-4">Semua nilai dalam Rupiah (Rp)</p>
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
             <p className="text-xs text-slate-400">Realisasi {currentYear}</p>
-            <p className="text-xl font-semibold text-emerald-400">{fmtRp(totalTahunIni)}</p>
+            <p className="text-xl font-semibold text-emerald-400">{fmtNum(totalTahunIni)}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400">Target {currentYear}</p>
-            <p className="text-xl font-semibold">{targetTahunIni ? fmtRp(targetTahunIni) : '-'}</p>
+            <p className="text-xl font-semibold">{targetTahunIni ? fmtNum(targetTahunIni) : '-'}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400">Realisasi %</p>
