@@ -76,7 +76,17 @@ function HoldingsTable({
 }
 
 export default function Portfolio() {
-  const { securities, holdingsBySecurity, holdingsGabungan, prices, loading, error, refresh } = usePortfolioData()
+  const {
+    securities,
+    holdingsBySecurity,
+    holdingsGabungan,
+    prices,
+    cashBalance,
+    cashBalanceBySecurity,
+    loading,
+    error,
+    refresh,
+  } = usePortfolioData()
   const { rows: watchlistRows } = useWatchlistData()
   const [tab, setTab] = useState<string>('gabungan')
 
@@ -84,11 +94,15 @@ export default function Portfolio() {
     watchlistRows.filter((r) => r.nilai_wajar !== null).map((r) => [r.ticker, r.nilai_wajar as number])
   )
 
-  const totalValue = holdingsGabungan
+  const holdingsForTab = tab === 'gabungan' ? holdingsGabungan : holdingsBySecurity.filter((h) => h.security_id === tab)
+  const cashForTab = tab === 'gabungan' ? cashBalance : cashBalanceBySecurity[tab] ?? 0
+
+  const stockValue = holdingsForTab
     .filter((h) => h.lot > 0)
     .reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
-  const totalCost = holdingsGabungan.filter((h) => h.lot > 0).reduce((sum, h) => sum + h.costBasis, 0)
-  const totalGain = totalValue - totalCost
+  const totalCost = holdingsForTab.filter((h) => h.lot > 0).reduce((sum, h) => sum + h.costBasis, 0)
+  const totalGain = stockValue - totalCost
+  const totalValue = stockValue + cashForTab
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -102,10 +116,20 @@ export default function Portfolio() {
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
         <p className="text-xs text-slate-400">Total Nilai Portofolio</p>
         <p className="text-2xl font-semibold">{fmtRp(totalValue)}</p>
-        <p className={`text-sm mt-1 ${totalGain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <p className={`text-sm mt-1 mb-3 ${totalGain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {totalGain >= 0 ? '+' : ''}
           {fmtRp(totalGain)} unrealized
         </p>
+        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+          <div>
+            <p className="text-xs text-slate-400">Nilai Saham</p>
+            <p className="text-base font-medium">{fmtRp(stockValue)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400">Kas</p>
+            <p className={`text-base font-medium ${cashForTab < 0 ? 'text-red-400' : ''}`}>{fmtRp(cashForTab)}</p>
+          </div>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
@@ -134,14 +158,8 @@ export default function Portfolio() {
 
       {loading ? (
         <p className="text-slate-400 text-sm">Memuat...</p>
-      ) : tab === 'gabungan' ? (
-        <HoldingsTable holdings={holdingsGabungan} prices={prices} fairValues={fairValues} />
       ) : (
-        <HoldingsTable
-          holdings={holdingsBySecurity.filter((h) => h.security_id === tab)}
-          prices={prices}
-          fairValues={fairValues}
-        />
+        <HoldingsTable holdings={holdingsForTab} prices={prices} fairValues={fairValues} />
       )}
     </div>
   )

@@ -15,15 +15,19 @@ const fmtRpCompact = (n: number) => {
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Dashboard() {
-  const { holdingsGabungan, transactions, prices, quotes, loading, error } = usePortfolioData()
+  const { holdingsGabungan, transactions, prices, quotes, cashBalance, loading, error } = usePortfolioData()
   const { withMos: watchlistWithMos } = useWatchlistData()
-  const buyCandidates = watchlistWithMos.filter((w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS)
 
   const held = holdingsGabungan.filter((h) => h.lot > 0)
-  const totalValue = held.reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
+  const ownedTickers = new Set(held.map((h) => h.ticker))
+  const buyCandidates = watchlistWithMos.filter(
+    (w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS && !ownedTickers.has(w.row.ticker)
+  )
+  const stockValue = held.reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
   const totalCost = held.reduce((sum, h) => sum + h.costBasis, 0)
-  const totalGain = totalValue - totalCost
+  const totalGain = stockValue - totalCost
   const totalGainPct = totalCost > 0 ? totalGain / totalCost : 0
+  const portfolioValue = stockValue + cashBalance
 
   const pieData = (() => {
     const withValue = held
@@ -75,7 +79,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-xs text-slate-400">Total Nilai Portofolio</p>
-          <p className="text-xl font-semibold">{fmtRp(totalValue)}</p>
+          <p className="text-xl font-semibold">{fmtRp(portfolioValue)}</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Saham {fmtRpCompact(stockValue)} · Kas {fmtRpCompact(cashBalance)}
+          </p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
           <p className="text-xs text-slate-400">Unrealized P/L</p>
@@ -152,7 +159,7 @@ export default function Dashboard() {
                   className="inline-block w-2.5 h-2.5 rounded-full"
                   style={{ background: entry.ticker === 'Lainnya' ? OTHER_SLICE : CATEGORICAL[i % CATEGORICAL.length] }}
                 />
-                {entry.ticker} ({fmtPct(totalValue > 0 ? entry.value / totalValue : 0).replace('+', '')})
+                {entry.ticker} ({fmtPct(stockValue > 0 ? entry.value / stockValue : 0).replace('+', '')})
               </div>
             ))}
           </div>

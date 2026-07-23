@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { usePortfolioData } from '../hooks/usePortfolioData'
 import { useWatchlistData } from '../hooks/useWatchlistData'
 import {
   BUY_THRESHOLD_MOS,
@@ -27,6 +28,8 @@ const methodLabels: Record<ValuationMethod, string> = {
 export default function Watchlist() {
   const { user } = useAuth()
   const { withMos, loading, error: loadError, refresh } = useWatchlistData()
+  const { holdingsGabungan } = usePortfolioData()
+  const ownedTickers = new Set(holdingsGabungan.filter((h) => h.lot > 0).map((h) => h.ticker))
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -330,6 +333,11 @@ export default function Watchlist() {
                     {isBuy && (
                       <span className="text-xs font-semibold bg-emerald-600 text-white px-2 py-0.5 rounded">
                         BELI
+                      </span>
+                    )}
+                    {ownedTickers.has(row.ticker) && (
+                      <span className="text-xs font-medium bg-slate-700 text-slate-300 px-2 py-0.5 rounded">
+                        Di Portofolio
                       </span>
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import type { Holding, Transaction } from './types'
+import type { CashFlow, Dividend, Holding, Transaction } from './types'
 
 /** IDX: 1 lot = 100 shares. `harga` is quoted per share; `lot` is quantity in lots. */
 export const LOT_SIZE = 100
@@ -137,4 +137,29 @@ export function computeCostBasisTimeline(transactions: Transaction[]): CostBasis
   }
 
   return points
+}
+
+/**
+ * Cash sitting in the brokerage account: deposits minus withdrawals, minus
+ * money spent on buys (incl. fee), plus proceeds from sells (net of fee),
+ * plus dividends received (they land as cash, not as stock). All three
+ * arrays should already be scoped to the same security (or all securities
+ * for the portfolio-wide figure) before calling this.
+ */
+export function computeCashBalance(
+  transactions: Transaction[],
+  cashFlows: CashFlow[],
+  dividends: Dividend[]
+): number {
+  const deposits = cashFlows.filter((c) => c.tipe === 'deposit').reduce((sum, c) => sum + c.jumlah, 0)
+  const withdrawals = cashFlows.filter((c) => c.tipe === 'withdraw').reduce((sum, c) => sum + c.jumlah, 0)
+  const buyCost = transactions
+    .filter((t) => t.tipe === 'buy')
+    .reduce((sum, t) => sum + t.harga * t.lot * LOT_SIZE + t.fee, 0)
+  const sellProceeds = transactions
+    .filter((t) => t.tipe === 'sell')
+    .reduce((sum, t) => sum + t.harga * t.lot * LOT_SIZE - t.fee, 0)
+  const dividendsReceived = dividends.reduce((sum, d) => sum + d.total, 0)
+
+  return deposits - withdrawals - buyCost + sellProceeds + dividendsReceived
 }
