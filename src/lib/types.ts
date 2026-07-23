@@ -70,6 +70,15 @@ export interface WatchlistRow {
   tanggal_update: string
 }
 
+export interface DividendTarget {
+  id: string
+  user_id: string
+  tahun: number
+  target: number
+  created_at: string
+  updated_at: string
+}
+
 export type PeriodeTipe = 'tahunan' | 'triwulan'
 
 export interface StockAnalysis {

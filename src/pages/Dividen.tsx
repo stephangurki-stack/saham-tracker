@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
-import type { Dividend, Security } from '../lib/types'
+import type { Dividend, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
@@ -14,9 +14,12 @@ export default function Dividen() {
 
   const [securities, setSecurities] = useState<Security[]>([])
   const [dividends, setDividends] = useState<Dividend[]>([])
+  const [targets, setTargets] = useState<DividendTarget[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [targetInput, setTargetInput] = useState('')
+  const [savingTarget, setSavingTarget] = useState(false)
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -26,9 +29,10 @@ export default function Dividen() {
 
   async function load() {
     setLoading(true)
-    const [secRes, divRes] = await Promise.all([
+    const [secRes, divRes, targetRes] = await Promise.all([
       supabase.from('securities').select('*').order('created_at', { ascending: true }),
       supabase.from('dividends').select('*').order('tanggal_bayar', { ascending: false }),
+      supabase.from('dividend_targets').select('*'),
     ])
     if (secRes.error) setError(secRes.error.message)
     else {
@@ -37,6 +41,13 @@ export default function Dividen() {
     }
     if (divRes.error) setError(divRes.error.message)
     else setDividends(divRes.data as Dividend[])
+    if (targetRes.error) setError(targetRes.error.message)
+    else {
+      const targetData = targetRes.data as DividendTarget[]
+      setTargets(targetData)
+      const thisYearTarget = targetData.find((t) => t.tahun === new Date().getFullYear())
+      if (thisYearTarget) setTargetInput(String(thisYearTarget.target))
+    }
     setLoading(false)
   }
 
@@ -95,12 +106,35 @@ export default function Dividen() {
     else load()
   }
 
+  async function handleSaveTarget() {
+    setError(null)
+    const targetNum = Number(targetInput)
+    if (!targetNum || !user) {
+      setError('Isi target dividen dengan angka valid.')
+      return
+    }
+    setSavingTarget(true)
+    const { error } = await supabase
+      .from('dividend_targets')
+      .upsert(
+        { user_id: user.id, tahun: new Date().getFullYear(), target: targetNum, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,tahun' }
+      )
+    if (error) setError(error.message)
+    else load()
+    setSavingTarget(false)
+  }
+
   const securityName = (id: string) => securities.find((s) => s.id === id)?.nama ?? '-'
 
   const currentYear = new Date().getFullYear()
   const totalTahunIni = dividends
     .filter((d) => new Date(d.tanggal_bayar).getFullYear() === currentYear)
     .reduce((s, d) => s + d.total, 0)
+
+  const targetByYear = new Map(targets.map((t) => [t.tahun, t.target]))
+  const targetTahunIni = targetByYear.get(currentYear) ?? null
+  const realisasiPct = targetTahunIni ? totalTahunIni / targetTahunIni : null
 
   const perTahun = new Map<number, number>()
   for (const d of dividends) {
@@ -124,8 +158,38 @@ export default function Dividen() {
       <h1 className="text-lg font-semibold mb-4">Dividen</h1>
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
-        <p className="text-xs text-slate-400">Total Dividen Tahun {currentYear}</p>
-        <p className="text-xl font-semibold text-emerald-400">{fmtRp(totalTahunIni)}</p>
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <div>
+            <p className="text-xs text-slate-400">Realisasi {currentYear}</p>
+            <p className="text-xl font-semibold text-emerald-400">{fmtRp(totalTahunIni)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400">Target {currentYear}</p>
+            <p className="text-xl font-semibold">{targetTahunIni ? fmtRp(targetTahunIni) : '-'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400">Realisasi %</p>
+            <p className={`text-xl font-semibold ${realisasiPct !== null && realisasiPct >= 1 ? 'text-emerald-400' : ''}`}>
+              {realisasiPct !== null ? fmtPct(realisasiPct) : '-'}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={targetInput}
+            onChange={(e) => setTargetInput(e.target.value)}
+            placeholder={`Set target dividen ${currentYear} (Rp)`}
+            className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+          />
+          <button
+            onClick={handleSaveTarget}
+            disabled={savingTarget}
+            className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm px-3 py-1.5"
+          >
+            Simpan Target
+          </button>
+        </div>
       </div>
 
       {securities.length === 0 && !loading ? (
@@ -227,13 +291,29 @@ export default function Dividen() {
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6">
           <p className="text-sm font-medium text-slate-300 mb-2">Rekap per Tahun</p>
           <table className="w-full text-sm">
+            <thead className="text-slate-400 text-left">
+              <tr>
+                <th className="py-1 pr-2">Tahun</th>
+                <th className="py-1 pr-2 text-right">Realisasi</th>
+                <th className="py-1 pr-2 text-right">Target</th>
+                <th className="py-1 text-right">%</th>
+              </tr>
+            </thead>
             <tbody>
-              {tahunSorted.map((year) => (
-                <tr key={year} className="border-t border-slate-800">
-                  <td className="py-1 pr-2">{year}</td>
-                  <td className="py-1 text-right">{fmtRp(perTahun.get(year)!)}</td>
-                </tr>
-              ))}
+              {tahunSorted.map((year) => {
+                const target = targetByYear.get(year) ?? null
+                const pct = target ? perTahun.get(year)! / target : null
+                return (
+                  <tr key={year} className="border-t border-slate-800">
+                    <td className="py-1 pr-2">{year}</td>
+                    <td className="py-1 pr-2 text-right">{fmtRp(perTahun.get(year)!)}</td>
+                    <td className="py-1 pr-2 text-right">{target ? fmtRp(target) : '-'}</td>
+                    <td className={`py-1 text-right ${pct !== null && pct >= 1 ? 'text-emerald-400' : ''}`}>
+                      {pct !== null ? fmtPct(pct) : '-'}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
