@@ -16,7 +16,26 @@ interface YearlyGrowth {
   totalAset: number
   profitLoss: number
   growthPct: number | null
+  fixed?: boolean
 }
+
+/**
+ * Years before cash_flows tracked deposits in isolation per-year (early
+ * migrated data lumps multi-year capital into a single dated entry), so Top
+ * Up/Profit-Loss can't be recomputed reliably from the database. These are
+ * taken verbatim from the "Anual Report" sheet instead of derived.
+ */
+const HISTORICAL_GROWTH: YearlyGrowth[] = [
+  {
+    year: 2025,
+    awalAset: 98_000_000,
+    topUp: 23_750_000,
+    totalAset: 172_092_551,
+    profitLoss: 50_342_551,
+    growthPct: 50_342_551 / (98_000_000 + 23_750_000),
+    fixed: true,
+  },
+]
 
 export default function Growth() {
   const { holdingsGabungan, cashFlows, prices, cashBalance, loading } = usePortfolioData()
@@ -65,7 +84,11 @@ export default function Growth() {
     const denom = awalAset + topUp
     rows.push({ year, awalAset, topUp, totalAset, profitLoss, growthPct: denom > 0 ? profitLoss / denom : null })
   }
-  rows.reverse()
+  const dynamicYears = new Set(rows.map((r) => r.year))
+  for (const historical of HISTORICAL_GROWTH) {
+    if (!dynamicYears.has(historical.year)) rows.push(historical)
+  }
+  rows.sort((a, b) => b.year - a.year)
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
@@ -92,6 +115,7 @@ export default function Growth() {
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-slate-300">
                   {r.year - 1} → {r.year}
+                  {r.fixed && <span className="text-xs text-slate-500 font-normal ml-2">dari Anual Report</span>}
                 </p>
                 {r.growthPct !== null ? (
                   <p
