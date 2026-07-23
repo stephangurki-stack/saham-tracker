@@ -2,6 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { exportAllDataToExcel } from '../lib/exportData'
+import {
+  clearBiometric,
+  clearPin,
+  hasBiometric,
+  hasPin,
+  isBiometricAvailable,
+  isBiometricSupported,
+  registerBiometric,
+  setPin,
+} from '../lib/appLock'
 import type { Security } from '../lib/types'
 
 export default function Securities() {
@@ -12,6 +22,68 @@ export default function Securities() {
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+
+  const [pinEnabled, setPinEnabled] = useState(hasPin())
+  const [biometricEnabled, setBiometricEnabled] = useState(hasBiometric())
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinConfirm, setPinConfirm] = useState('')
+  const [lockError, setLockError] = useState<string | null>(null)
+  const [lockSuccess, setLockSuccess] = useState<string | null>(null)
+  const [savingPin, setSavingPin] = useState(false)
+  const [registeringBiometric, setRegisteringBiometric] = useState(false)
+
+  useEffect(() => {
+    if (isBiometricSupported()) isBiometricAvailable().then(setBiometricAvailable)
+  }, [])
+
+  async function handleSetPin(e: FormEvent) {
+    e.preventDefault()
+    setLockError(null)
+    setLockSuccess(null)
+    if (pinInput.length < 4) {
+      setLockError('PIN minimal 4 digit.')
+      return
+    }
+    if (pinInput !== pinConfirm) {
+      setLockError('Konfirmasi PIN tidak cocok.')
+      return
+    }
+    setSavingPin(true)
+    await setPin(pinInput)
+    setPinEnabled(true)
+    setPinInput('')
+    setPinConfirm('')
+    setLockSuccess('PIN berhasil disimpan.')
+    setSavingPin(false)
+  }
+
+  function handleRemovePin() {
+    if (!confirm('Hapus PIN? Anda tidak akan diminta PIN lagi saat membuka aplikasi.')) return
+    clearPin()
+    setPinEnabled(false)
+    setLockSuccess(null)
+  }
+
+  async function handleRegisterBiometric() {
+    setLockError(null)
+    setLockSuccess(null)
+    setRegisteringBiometric(true)
+    try {
+      await registerBiometric(user?.email ?? 'user')
+      setBiometricEnabled(true)
+      setLockSuccess('Sidik jari / Face ID berhasil didaftarkan.')
+    } catch (e) {
+      setLockError(e instanceof Error ? e.message : 'Gagal mendaftarkan biometrik. Pastikan HP mendukung dan sudah setup sidik jari/Face ID.')
+    }
+    setRegisteringBiometric(false)
+  }
+
+  function handleRemoveBiometric() {
+    clearBiometric()
+    setBiometricEnabled(false)
+    setLockSuccess(null)
+  }
 
   async function handleExport() {
     setExporting(true)
@@ -99,6 +171,75 @@ export default function Securities() {
       )}
 
       <div className="mt-8 bg-white border border-slate-200 rounded-lg p-4">
+        <p className="text-sm font-medium text-slate-700 mb-1">Kunci Aplikasi</p>
+        <p className="text-xs text-slate-400 mb-3">
+          Setelah login, buka aplikasi berikutnya cukup dengan PIN atau sidik jari/Face ID — tidak perlu ketik email
+          dan password lagi. Tersimpan hanya di HP ini.
+        </p>
+
+        {lockError && <p className="text-sm text-red-600 mb-3">{lockError}</p>}
+        {lockSuccess && <p className="text-sm text-emerald-600 mb-3">{lockSuccess}</p>}
+
+        {biometricAvailable && (
+          <div className="mb-4 pb-4 border-b border-slate-200">
+            <p className="text-xs text-slate-600 mb-2">Sidik Jari / Face ID</p>
+            {biometricEnabled ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-emerald-600">Aktif</span>
+                <button onClick={handleRemoveBiometric} className="text-sm text-red-600 hover:text-red-700">
+                  Nonaktifkan
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleRegisterBiometric}
+                disabled={registeringBiometric}
+                className="rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-50 text-slate-800 text-sm px-4 py-2"
+              >
+                {registeringBiometric ? 'Menunggu verifikasi...' : 'Daftarkan Sidik Jari / Face ID'}
+              </button>
+            )}
+          </div>
+        )}
+
+        <p className="text-xs text-slate-600 mb-2">PIN</p>
+        {pinEnabled ? (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-emerald-600">Aktif</span>
+            <button onClick={handleRemovePin} className="text-sm text-red-600 hover:text-red-700">
+              Hapus PIN
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSetPin} className="flex flex-col gap-2">
+            <input
+              type="password"
+              inputMode="numeric"
+              placeholder="PIN baru (4-6 digit)"
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="rounded-md bg-slate-100 border border-slate-300 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              inputMode="numeric"
+              placeholder="Ulangi PIN"
+              value={pinConfirm}
+              onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="rounded-md bg-slate-100 border border-slate-300 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={savingPin}
+              className="rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm px-4 py-2"
+            >
+              Simpan PIN
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="mt-4 bg-white border border-slate-200 rounded-lg p-4">
         <p className="text-sm font-medium text-slate-700 mb-1">Backup Data</p>
         <p className="text-xs text-slate-400 mb-3">
           Unduh seluruh data Anda (sekuritas, transaksi, investasi, dividen, watchlist, analisa) sebagai satu file
@@ -108,7 +249,7 @@ export default function Securities() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-md bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-white text-sm px-4 py-2"
+          className="rounded-md bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-800 text-sm px-4 py-2"
         >
           {exporting ? 'Menyiapkan file...' : 'Export ke Excel'}
         </button>
