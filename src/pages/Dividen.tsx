@@ -19,6 +19,7 @@ export default function Dividen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [targetInput, setTargetInput] = useState('')
   const [savingTarget, setSavingTarget] = useState(false)
 
@@ -65,6 +66,27 @@ export default function Dividen() {
   function handleLotChange(value: string) {
     setLot(value)
     recalcTotal(jumlahPerLembar, value)
+  }
+
+  function resetForm() {
+    setEditingId(null)
+    setTicker('')
+    setTanggalBayar(todayISO())
+    setJumlahPerLembar('')
+    setLot('')
+    setTotal('')
+  }
+
+  function startEdit(d: Dividend) {
+    setError(null)
+    setEditingId(d.id)
+    setSecurityId(d.security_id)
+    setTicker(d.ticker)
+    setTanggalBayar(d.tanggal_bayar)
+    setJumlahPerLembar(String(d.jumlah_per_lembar))
+    setLot(d.lot !== null ? String(d.lot) : '')
+    setTotal(String(d.total))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function load() {
@@ -132,7 +154,7 @@ export default function Dividen() {
       return
     }
 
-    const { error: divErr } = await supabase.from('dividends').insert({
+    const payload = {
       user_id: user.id,
       security_id: securityId,
       ticker: tickerUpper,
@@ -140,14 +162,15 @@ export default function Dividen() {
       jumlah_per_lembar: perLembarNum,
       lot: lot ? Number(lot) : null,
       total: totalNum,
-    })
+    }
+
+    const { error: divErr } = editingId
+      ? await supabase.from('dividends').update(payload).eq('id', editingId)
+      : await supabase.from('dividends').insert(payload)
 
     if (divErr) setError(divErr.message)
     else {
-      setTicker('')
-      setJumlahPerLembar('')
-      setLot('')
-      setTotal('')
+      resetForm()
       load()
     }
     setSubmitting(false)
@@ -264,6 +287,14 @@ export default function Dividen() {
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 space-y-3">
+          {editingId && (
+            <p className="text-xs text-blue-400">
+              Mengedit catatan {ticker}.{' '}
+              <button type="button" onClick={resetForm} className="underline hover:text-blue-300">
+                Batal
+              </button>
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-slate-400 mb-1">Sekuritas</label>
@@ -359,7 +390,7 @@ export default function Dividen() {
             disabled={submitting}
             className="w-full rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2"
           >
-            Catat Dividen
+            {editingId ? 'Update Dividen' : 'Catat Dividen'}
           </button>
         </form>
       )}
@@ -457,7 +488,10 @@ export default function Dividen() {
                   <td className="py-1 pr-2">{fmtRp(d.jumlah_per_lembar)}</td>
                   <td className="py-1 pr-2">{fmtRp(d.total)}</td>
                   <td className="py-1 pr-2">{securityName(d.security_id)}</td>
-                  <td className="py-1">
+                  <td className="py-1 whitespace-nowrap">
+                    <button onClick={() => startEdit(d)} className="text-blue-400 hover:text-blue-300 mr-3">
+                      Edit
+                    </button>
                     <button onClick={() => handleDelete(d.id)} className="text-red-400 hover:text-red-300">
                       Hapus
                     </button>
