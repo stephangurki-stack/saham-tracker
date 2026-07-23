@@ -6,6 +6,7 @@ import { marginOfSafety } from '../lib/valuation'
 import type { Holding } from '../lib/types'
 
 const fmtRp = (n: number) => 'Rp ' + Math.round(n).toLocaleString('id-ID')
+const fmtNum = (n: number) => Math.round(n).toLocaleString('id-ID')
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
 function HoldingsTable({
@@ -53,11 +54,11 @@ function HoldingsTable({
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-800">
                 <td className="py-1 pr-3 font-medium">{h.ticker}</td>
                 <td className="py-1 pr-3">{h.lot}</td>
-                <td className="py-1 pr-3">{fmtRp(h.avgBuyPrice)}</td>
-                <td className="py-1 pr-3">{price ? fmtRp(price) : '-'}</td>
-                <td className="py-1 pr-3">{price ? fmtRp(value) : '-'}</td>
+                <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
+                <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
+                <td className="py-1 pr-3">{price ? fmtNum(value) : '-'}</td>
                 <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {fmtRp(gain)}
+                  {fmtNum(gain)}
                 </td>
                 <td className={`py-1 pr-3 ${gainPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {fmtPct(gainPct)}
