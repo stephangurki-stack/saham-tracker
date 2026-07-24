@@ -28,6 +28,7 @@ export default function Dividen() {
   const [editingProjectionTicker, setEditingProjectionTicker] = useState<string | null>(null)
   const [projectionInput, setProjectionInput] = useState('')
   const [savingProjection, setSavingProjection] = useState(false)
+  const [showAllDividends, setShowAllDividends] = useState(false)
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -211,16 +212,16 @@ export default function Dividen() {
     setSavingTarget(false)
   }
 
-  function startEditProjection(tk: string, currentValue: number) {
+  function startEditProjection(tk: string, currentPerLembar: number) {
     setEditingProjectionTicker(tk)
-    setProjectionInput(String(Math.round(currentValue)))
+    setProjectionInput(String(Math.round(currentPerLembar * 100) / 100))
   }
 
   async function handleSaveProjection(tk: string) {
     setError(null)
-    const jumlahNum = Number(projectionInput)
-    if (!user || jumlahNum < 0 || projectionInput === '') {
-      setError('Isi proyeksi dengan angka valid.')
+    const perLembarNum = Number(projectionInput)
+    if (!user || perLembarNum < 0 || projectionInput === '') {
+      setError('Isi Rp/Lembar dengan angka valid.')
       return
     }
     setSavingProjection(true)
@@ -229,7 +230,7 @@ export default function Dividen() {
         user_id: user.id,
         ticker: tk,
         tahun: currentYear + 1,
-        jumlah: jumlahNum,
+        jumlah: perLembarNum,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id,ticker,tahun' }
@@ -296,7 +297,7 @@ export default function Dividen() {
   // Projected next-year dividend = current combined lot per ticker × this year's
   // realized dividend-per-share rate (total received ÷ lot it was paid on, weighted
   // in case a ticker had multiple payouts/accounts this year at different rates).
-  // A manual override in dividend_projections replaces the auto-calculated value.
+  // A manual Rp/Lembar override in dividend_projections replaces the auto-calculated rate.
   const projectionByTicker = new Map(
     projections.filter((p) => p.tahun === currentYear + 1).map((p) => [p.ticker, p.jumlah])
   )
@@ -308,16 +309,15 @@ export default function Dividen() {
       )
       const totalReceived = divsTahunIni.reduce((s, d) => s + d.total, 0)
       const totalLotDasar = divsTahunIni.reduce((s, d) => s + (d.lot ?? 0), 0)
-      const perLembar = totalLotDasar > 0 ? totalReceived / (totalLotDasar * LOT_SIZE) : null
-      const auto = perLembar !== null ? perLembar * h.lot * LOT_SIZE : null
-      const manual = projectionByTicker.get(h.ticker) ?? null
+      const autoPerLembar = totalLotDasar > 0 ? totalReceived / (totalLotDasar * LOT_SIZE) : null
+      const manualPerLembar = projectionByTicker.get(h.ticker) ?? null
+      const perLembar = manualPerLembar ?? autoPerLembar
       return {
         ticker: h.ticker,
         lot: h.lot,
         perLembar,
-        auto,
-        proyeksi: manual ?? auto,
-        isManual: manual !== null,
+        proyeksi: perLembar !== null ? perLembar * h.lot * LOT_SIZE : null,
+        isManual: manualPerLembar !== null,
       }
     })
     .filter((r) => r.proyeksi !== null)
@@ -566,25 +566,23 @@ export default function Dividen() {
                   <tr key={r.ticker} className="border-t border-slate-200">
                     <td className="py-1 pr-2 font-medium">{r.ticker}</td>
                     <td className="py-1 pr-2 text-right">{r.lot}</td>
-                    <td className="py-1 pr-2 text-right">{fmtNum(r.perLembar ?? 0)}</td>
                     <td className="py-1 pr-2 text-right">
                       {editingProjectionTicker === r.ticker ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <input
-                            type="number"
-                            autoFocus
-                            value={projectionInput}
-                            onChange={(e) => setProjectionInput(e.target.value)}
-                            className="w-28 rounded-md bg-slate-100 border border-slate-300 px-2 py-1 text-sm text-slate-900 text-right"
-                          />
-                        </div>
+                        <input
+                          type="number"
+                          autoFocus
+                          value={projectionInput}
+                          onChange={(e) => setProjectionInput(e.target.value)}
+                          className="w-24 rounded-md bg-slate-100 border border-slate-300 px-2 py-1 text-sm text-slate-900 text-right"
+                        />
                       ) : (
                         <>
-                          {fmtNum(r.proyeksi ?? 0)}
+                          {fmtNum(r.perLembar ?? 0)}
                           {r.isManual && <span className="text-xs text-blue-600 ml-1">(manual)</span>}
                         </>
                       )}
                     </td>
+                    <td className="py-1 pr-2 text-right">{fmtNum(r.proyeksi ?? 0)}</td>
                     <td className="py-1 whitespace-nowrap">
                       {editingProjectionTicker === r.ticker ? (
                         <div className="flex gap-2">
@@ -605,7 +603,7 @@ export default function Dividen() {
                       ) : (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => startEditProjection(r.ticker, r.proyeksi ?? 0)}
+                            onClick={() => startEditProjection(r.ticker, r.perLembar ?? 0)}
                             className="text-blue-600 hover:text-blue-700 text-xs"
                           >
                             Edit
@@ -649,7 +647,7 @@ export default function Dividen() {
               </tr>
             </thead>
             <tbody>
-              {dividends.map((d) => (
+              {(showAllDividends ? dividends : dividends.slice(0, 11)).map((d) => (
                 <tr key={d.id} className="border-t border-slate-200">
                   <td className="py-1 pr-2">{d.tanggal_bayar}</td>
                   <td className="py-1 pr-2 font-medium">{d.ticker}</td>
@@ -669,6 +667,14 @@ export default function Dividen() {
               ))}
             </tbody>
           </table>
+          {dividends.length > 11 && (
+            <button
+              onClick={() => setShowAllDividends((v) => !v)}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+            >
+              {showAllDividends ? 'Tampilkan lebih sedikit' : `Tampilkan semua (${dividends.length})`}
+            </button>
+          )}
         </div>
       )}
     </div>
