@@ -244,6 +244,29 @@ export default function Dividen() {
     }
   })
 
+  // Projected next-year dividend = current combined lot per ticker × this year's
+  // realized dividend-per-share rate (total received ÷ lot it was paid on, weighted
+  // in case a ticker had multiple payouts/accounts this year at different rates).
+  const projeksiPerSaham = holdingsGabungan
+    .filter((h) => h.lot > 0)
+    .map((h) => {
+      const divsTahunIni = dividends.filter(
+        (d) => d.ticker === h.ticker && new Date(d.tanggal_bayar).getFullYear() === currentYear && d.lot
+      )
+      const totalReceived = divsTahunIni.reduce((s, d) => s + d.total, 0)
+      const totalLotDasar = divsTahunIni.reduce((s, d) => s + (d.lot ?? 0), 0)
+      const perLembar = totalLotDasar > 0 ? totalReceived / (totalLotDasar * LOT_SIZE) : null
+      return {
+        ticker: h.ticker,
+        lot: h.lot,
+        perLembar,
+        proyeksi: perLembar !== null ? perLembar * h.lot * LOT_SIZE : null,
+      }
+    })
+    .filter((r) => r.proyeksi !== null)
+    .sort((a, b) => (b.proyeksi ?? 0) - (a.proyeksi ?? 0))
+  const totalProyeksi = projeksiPerSaham.reduce((s, r) => s + (r.proyeksi ?? 0), 0)
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-lg font-semibold mb-1">Dividen</h1>
@@ -460,6 +483,38 @@ export default function Dividen() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {projeksiPerSaham.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-slate-700 mb-1">Proyeksi Dividen {currentYear + 1}</p>
+          <p className="text-xs text-slate-400 mb-3">
+            Lot pada portofolio gabungan saat ini × dividen per lembar yang sudah diterima tahun {currentYear}
+          </p>
+          <p className="text-xl font-semibold text-emerald-600 mb-3">{fmtNum(totalProyeksi)}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-slate-600 text-left">
+                <tr>
+                  <th className="py-1 pr-2">Ticker</th>
+                  <th className="py-1 pr-2 text-right">Lot</th>
+                  <th className="py-1 pr-2 text-right">Rp/Lembar ({currentYear})</th>
+                  <th className="py-1 text-right">Proyeksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projeksiPerSaham.map((r) => (
+                  <tr key={r.ticker} className="border-t border-slate-200">
+                    <td className="py-1 pr-2 font-medium">{r.ticker}</td>
+                    <td className="py-1 pr-2 text-right">{r.lot}</td>
+                    <td className="py-1 pr-2 text-right">{fmtNum(r.perLembar ?? 0)}</td>
+                    <td className="py-1 text-right">{fmtNum(r.proyeksi ?? 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
