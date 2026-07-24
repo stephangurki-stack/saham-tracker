@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { usePrivacyMode } from '../hooks/usePrivacyMode'
 import { LOT_SIZE } from '../lib/portfolio'
-import type { Dividend, DividendTarget, Security } from '../lib/types'
+import type { Dividend, DividendProjection, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
@@ -18,12 +18,16 @@ export default function Dividen() {
   const [securities, setSecurities] = useState<Security[]>([])
   const [dividends, setDividends] = useState<Dividend[]>([])
   const [targets, setTargets] = useState<DividendTarget[]>([])
+  const [projections, setProjections] = useState<DividendProjection[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [targetInput, setTargetInput] = useState('')
   const [savingTarget, setSavingTarget] = useState(false)
+  const [editingProjectionTicker, setEditingProjectionTicker] = useState<string | null>(null)
+  const [projectionInput, setProjectionInput] = useState('')
+  const [savingProjection, setSavingProjection] = useState(false)
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -93,10 +97,11 @@ export default function Dividen() {
 
   async function load() {
     setLoading(true)
-    const [secRes, divRes, targetRes] = await Promise.all([
+    const [secRes, divRes, targetRes, projectionRes] = await Promise.all([
       supabase.from('securities').select('*').order('created_at', { ascending: true }),
       supabase.from('dividends').select('*').order('tanggal_bayar', { ascending: false }),
       supabase.from('dividend_targets').select('*'),
+      supabase.from('dividend_projections').select('*'),
     ])
     if (secRes.error) setError(secRes.error.message)
     else {
@@ -112,6 +117,8 @@ export default function Dividen() {
       const thisYearTarget = targetData.find((t) => t.tahun === new Date().getFullYear())
       if (thisYearTarget) setTargetInput(String(thisYearTarget.target))
     }
+    if (projectionRes.error) setError(projectionRes.error.message)
+    else setProjections(projectionRes.data as DividendProjection[])
     setLoading(false)
   }
 
@@ -204,6 +211,48 @@ export default function Dividen() {
     setSavingTarget(false)
   }
 
+  function startEditProjection(tk: string, currentValue: number) {
+    setEditingProjectionTicker(tk)
+    setProjectionInput(String(Math.round(currentValue)))
+  }
+
+  async function handleSaveProjection(tk: string) {
+    setError(null)
+    const jumlahNum = Number(projectionInput)
+    if (!user || jumlahNum < 0 || projectionInput === '') {
+      setError('Isi proyeksi dengan angka valid.')
+      return
+    }
+    setSavingProjection(true)
+    const { error } = await supabase.from('dividend_projections').upsert(
+      {
+        user_id: user.id,
+        ticker: tk,
+        tahun: currentYear + 1,
+        jumlah: jumlahNum,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,ticker,tahun' }
+    )
+    if (error) setError(error.message)
+    else {
+      setEditingProjectionTicker(null)
+      await load()
+    }
+    setSavingProjection(false)
+  }
+
+  async function handleResetProjection(tk: string) {
+    if (!confirm(`Kembalikan proyeksi ${tk} ke perhitungan otomatis?`)) return
+    const { error } = await supabase
+      .from('dividend_projections')
+      .delete()
+      .eq('ticker', tk)
+      .eq('tahun', currentYear + 1)
+    if (error) setError(error.message)
+    else load()
+  }
+
   const securityName = (id: string) => securities.find((s) => s.id === id)?.nama ?? '-'
 
   const currentYear = new Date().getFullYear()
@@ -247,6 +296,10 @@ export default function Dividen() {
   // Projected next-year dividend = current combined lot per ticker × this year's
   // realized dividend-per-share rate (total received ÷ lot it was paid on, weighted
   // in case a ticker had multiple payouts/accounts this year at different rates).
+  // A manual override in dividend_projections replaces the auto-calculated value.
+  const projectionByTicker = new Map(
+    projections.filter((p) => p.tahun === currentYear + 1).map((p) => [p.ticker, p.jumlah])
+  )
   const projeksiPerSaham = holdingsGabungan
     .filter((h) => h.lot > 0)
     .map((h) => {
@@ -256,11 +309,15 @@ export default function Dividen() {
       const totalReceived = divsTahunIni.reduce((s, d) => s + d.total, 0)
       const totalLotDasar = divsTahunIni.reduce((s, d) => s + (d.lot ?? 0), 0)
       const perLembar = totalLotDasar > 0 ? totalReceived / (totalLotDasar * LOT_SIZE) : null
+      const auto = perLembar !== null ? perLembar * h.lot * LOT_SIZE : null
+      const manual = projectionByTicker.get(h.ticker) ?? null
       return {
         ticker: h.ticker,
         lot: h.lot,
         perLembar,
-        proyeksi: perLembar !== null ? perLembar * h.lot * LOT_SIZE : null,
+        auto,
+        proyeksi: manual ?? auto,
+        isManual: manual !== null,
       }
     })
     .filter((r) => r.proyeksi !== null)
@@ -500,7 +557,8 @@ export default function Dividen() {
                   <th className="py-1 pr-2">Ticker</th>
                   <th className="py-1 pr-2 text-right">Lot</th>
                   <th className="py-1 pr-2 text-right">Rp/Lembar ({currentYear})</th>
-                  <th className="py-1 text-right">Proyeksi</th>
+                  <th className="py-1 pr-2 text-right">Proyeksi</th>
+                  <th className="py-1"></th>
                 </tr>
               </thead>
               <tbody>
@@ -509,7 +567,60 @@ export default function Dividen() {
                     <td className="py-1 pr-2 font-medium">{r.ticker}</td>
                     <td className="py-1 pr-2 text-right">{r.lot}</td>
                     <td className="py-1 pr-2 text-right">{fmtNum(r.perLembar ?? 0)}</td>
-                    <td className="py-1 text-right">{fmtNum(r.proyeksi ?? 0)}</td>
+                    <td className="py-1 pr-2 text-right">
+                      {editingProjectionTicker === r.ticker ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <input
+                            type="number"
+                            autoFocus
+                            value={projectionInput}
+                            onChange={(e) => setProjectionInput(e.target.value)}
+                            className="w-28 rounded-md bg-slate-100 border border-slate-300 px-2 py-1 text-sm text-slate-900 text-right"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {fmtNum(r.proyeksi ?? 0)}
+                          {r.isManual && <span className="text-xs text-blue-600 ml-1">(manual)</span>}
+                        </>
+                      )}
+                    </td>
+                    <td className="py-1 whitespace-nowrap">
+                      {editingProjectionTicker === r.ticker ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveProjection(r.ticker)}
+                            disabled={savingProjection}
+                            className="text-blue-600 hover:text-blue-700 text-xs"
+                          >
+                            Simpan
+                          </button>
+                          <button
+                            onClick={() => setEditingProjectionTicker(null)}
+                            className="text-slate-600 hover:text-slate-800 text-xs"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => startEditProjection(r.ticker, r.proyeksi ?? 0)}
+                            className="text-blue-600 hover:text-blue-700 text-xs"
+                          >
+                            Edit
+                          </button>
+                          {r.isManual && (
+                            <button
+                              onClick={() => handleResetProjection(r.ticker)}
+                              className="text-slate-600 hover:text-slate-800 text-xs"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

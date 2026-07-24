@@ -90,6 +90,16 @@ export interface DividendTarget {
   updated_at: string
 }
 
+export interface DividendProjection {
+  id: string
+  user_id: string
+  ticker: string
+  tahun: number
+  jumlah: number
+  created_at: string
+  updated_at: string
+}
+
 export type PeriodeTipe = 'tahunan' | 'triwulan'
 
 export interface StockAnalysis {
