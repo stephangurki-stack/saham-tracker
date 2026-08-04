@@ -12,7 +12,7 @@ const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Investasi() {
   const { user } = useAuth()
-  const { holdingsGabungan, holdingsBySecurity, cashBalanceBySecurity, prices } = usePortfolioData()
+  const { holdingsGabungan, holdingsBySecurity, cashBalance, cashBalanceBySecurity, prices } = usePortfolioData()
   const { hidden } = usePrivacyMode()
   const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
 
@@ -102,9 +102,9 @@ export default function Investasi() {
     })
     .filter((s) => s.deposit > 0 || s.withdraw > 0)
 
-  const currentValue = holdingsGabungan
-    .filter((h) => h.lot > 0)
-    .reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
+  const currentValue =
+    holdingsGabungan.filter((h) => h.lot > 0).reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0) +
+    cashBalance
 
   const totalReturn = netDeposited > 0 ? (currentValue - netDeposited) / netDeposited : null
 
@@ -131,6 +131,9 @@ export default function Investasi() {
         <div className="bg-white border border-slate-200 rounded-lg p-4">
           <p className="text-xs text-slate-600">Nilai Portofolio Sekarang</p>
           <p className="text-xl font-semibold">{fmtRp(currentValue)}</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Saham {fmtRp(currentValue - cashBalance)} · Kas {fmtRp(cashBalance)}
+          </p>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg p-4">
           <p className="text-xs text-slate-600">Total Return</p>
