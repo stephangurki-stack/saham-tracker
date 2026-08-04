@@ -29,6 +29,7 @@ export default function Dividen() {
   const [projectionInput, setProjectionInput] = useState('')
   const [savingProjection, setSavingProjection] = useState(false)
   const [showAllDividends, setShowAllDividends] = useState(false)
+  const [rekapTab, setRekapTab] = useState<string>('gabungan')
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -272,16 +273,20 @@ export default function Dividen() {
   }
   const tahunSorted = [...perTahun.keys()].sort((a, b) => b - a)
 
+  const dividendsForRekap =
+    rekapTab === 'gabungan' ? dividends : dividends.filter((d) => d.security_id === rekapTab)
+  const holdingsForRekap = rekapTab === 'gabungan' ? holdingsGabungan : holdingsBySecurity.filter((h) => h.security_id === rekapTab)
+
   const perSahamTotal = new Map<string, number>()
   const perSahamTahunIni = new Map<string, number>()
-  for (const d of dividends) {
+  for (const d of dividendsForRekap) {
     perSahamTotal.set(d.ticker, (perSahamTotal.get(d.ticker) ?? 0) + d.total)
     if (new Date(d.tanggal_bayar).getFullYear() === currentYear) {
       perSahamTahunIni.set(d.ticker, (perSahamTahunIni.get(d.ticker) ?? 0) + d.total)
     }
   }
   const rekapPerSaham = [...perSahamTotal.entries()].map(([tk, totalDiterima]) => {
-    const holding = holdingsGabungan.find((h) => h.ticker === tk && h.lot > 0)
+    const holding = holdingsForRekap.find((h) => h.ticker === tk && h.lot > 0)
     const costBasis = holding && holding.costBasis > 0 ? holding.costBasis : null
     const tahunIni = perSahamTahunIni.get(tk) ?? 0
     return {
@@ -478,36 +483,61 @@ export default function Dividen() {
         </form>
       )}
 
-      {rekapPerSaham.length > 0 && (
+      {dividends.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
           <p className="text-sm font-medium text-slate-700 mb-1">Rekap Dividen per Saham</p>
           <p className="text-xs text-slate-400 mb-2">
             Yield dihitung terhadap cost basis (modal tertanam) saham tersebut saat ini
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-slate-600 text-left">
-                <tr>
-                  <th className="py-1 pr-2">Ticker</th>
-                  <th className="py-1 pr-2 text-right">Total Dividen</th>
-                  <th className="py-1 pr-2 text-right">Yield (Total)</th>
-                  <th className="py-1 pr-2 text-right">Dividen {currentYear}</th>
-                  <th className="py-1 text-right">Yield ({currentYear})</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rekapPerSaham.map((r) => (
-                  <tr key={r.ticker} className="border-t border-slate-200">
-                    <td className="py-1 pr-2 font-medium">{r.ticker}</td>
-                    <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
-                    <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
-                    <td className="py-1 pr-2 text-right">{fmtNum(r.tahunIni)}</td>
-                    <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex gap-2 mb-3 overflow-x-auto">
+            <button
+              onClick={() => setRekapTab('gabungan')}
+              className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
+                rekapTab === 'gabungan' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              Gabungan
+            </button>
+            {securities.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setRekapTab(s.id)}
+                className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
+                  rekapTab === s.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                }`}
+              >
+                {s.nama}
+              </button>
+            ))}
           </div>
+          {rekapPerSaham.length === 0 ? (
+            <p className="text-slate-600 text-sm">Belum ada dividen untuk akun ini.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-slate-600 text-left">
+                  <tr>
+                    <th className="py-1 pr-2">Ticker</th>
+                    <th className="py-1 pr-2 text-right">Total Dividen</th>
+                    <th className="py-1 pr-2 text-right">Yield (Total)</th>
+                    <th className="py-1 pr-2 text-right">Dividen {currentYear}</th>
+                    <th className="py-1 text-right">Yield ({currentYear})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rekapPerSaham.map((r) => (
+                    <tr key={r.ticker} className="border-t border-slate-200">
+                      <td className="py-1 pr-2 font-medium">{r.ticker}</td>
+                      <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
+                      <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
+                      <td className="py-1 pr-2 text-right">{fmtNum(r.tahunIni)}</td>
+                      <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
