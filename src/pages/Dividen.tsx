@@ -298,6 +298,8 @@ export default function Dividen() {
       yieldTahunIniPct: costBasis ? tahunIni / costBasis : null,
     }
   })
+  const rekapTotalKeseluruhan = rekapPerSaham.reduce((s, r) => s + r.totalDiterima, 0)
+  const rekapTotalTahunIni = rekapPerSaham.reduce((s, r) => s + r.tahunIni, 0)
 
   // Projected next-year dividend = current combined lot per ticker × this year's
   // realized dividend-per-share rate (total received ÷ lot it was paid on, weighted
@@ -513,30 +515,42 @@ export default function Dividen() {
           {rekapPerSaham.length === 0 ? (
             <p className="text-slate-600 text-sm">Belum ada dividen untuk akun ini.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-slate-600 text-left">
-                  <tr>
-                    <th className="py-1 pr-2">Ticker</th>
-                    <th className="py-1 pr-2 text-right">Total Dividen</th>
-                    <th className="py-1 pr-2 text-right">Yield (Total)</th>
-                    <th className="py-1 pr-2 text-right">Dividen {currentYear}</th>
-                    <th className="py-1 text-right">Yield ({currentYear})</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rekapPerSaham.map((r) => (
-                    <tr key={r.ticker} className="border-t border-slate-200">
-                      <td className="py-1 pr-2 font-medium">{r.ticker}</td>
-                      <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
-                      <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
-                      <td className="py-1 pr-2 text-right">{fmtNum(r.tahunIni)}</td>
-                      <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-slate-600">Total Dividen Diterima</p>
+                  <p className="text-lg font-semibold text-emerald-600">{fmtNum(rekapTotalKeseluruhan)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-600">Total Dividen {currentYear}</p>
+                  <p className="text-lg font-semibold text-emerald-600">{fmtNum(rekapTotalTahunIni)}</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-slate-600 text-left">
+                    <tr>
+                      <th className="py-1 pr-2">Ticker</th>
+                      <th className="py-1 pr-2 text-right">Total Dividen</th>
+                      <th className="py-1 pr-2 text-right">Yield (Total)</th>
+                      <th className="py-1 pr-2 text-right">Dividen {currentYear}</th>
+                      <th className="py-1 text-right">Yield ({currentYear})</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rekapPerSaham.map((r) => (
+                      <tr key={r.ticker} className="border-t border-slate-200">
+                        <td className="py-1 pr-2 font-medium">{r.ticker}</td>
+                        <td className="py-1 pr-2 text-right">{fmtNum(r.totalDiterima)}</td>
+                        <td className="py-1 pr-2 text-right">{r.yieldTotalPct !== null ? fmtPct(r.yieldTotalPct) : '-'}</td>
+                        <td className="py-1 pr-2 text-right">{fmtNum(r.tahunIni)}</td>
+                        <td className="py-1 text-right">{r.yieldTahunIniPct !== null ? fmtPct(r.yieldTahunIniPct) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
