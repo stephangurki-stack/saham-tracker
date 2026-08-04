@@ -87,6 +87,15 @@ export default function Investasi() {
   const totalWithdraw = cashFlows.filter((c) => c.tipe === 'withdraw').reduce((s, c) => s + c.jumlah, 0)
   const netDeposited = totalDeposit - totalWithdraw
 
+  const netDepositedBySecurity = securities
+    .map((s) => {
+      const flowsForSecurity = cashFlows.filter((c) => c.security_id === s.id)
+      const deposit = flowsForSecurity.filter((c) => c.tipe === 'deposit').reduce((sum, c) => sum + c.jumlah, 0)
+      const withdraw = flowsForSecurity.filter((c) => c.tipe === 'withdraw').reduce((sum, c) => sum + c.jumlah, 0)
+      return { id: s.id, nama: s.nama, deposit, withdraw, net: deposit - withdraw }
+    })
+    .filter((s) => s.deposit > 0 || s.withdraw > 0)
+
   const currentValue = holdingsGabungan
     .filter((h) => h.lot > 0)
     .reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
@@ -130,6 +139,34 @@ export default function Investasi() {
           </p>
         </div>
       </div>
+
+      {netDepositedBySecurity.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-slate-700 mb-2">Modal Disetor per Sekuritas</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-slate-600 text-left">
+                <tr>
+                  <th className="py-1 pr-2">Sekuritas</th>
+                  <th className="py-1 pr-2 text-right">Setor</th>
+                  <th className="py-1 pr-2 text-right">Tarik</th>
+                  <th className="py-1 text-right">Net</th>
+                </tr>
+              </thead>
+              <tbody>
+                {netDepositedBySecurity.map((s) => (
+                  <tr key={s.id} className="border-t border-slate-200">
+                    <td className="py-1 pr-2 font-medium">{s.nama}</td>
+                    <td className="py-1 pr-2 text-right">{fmtRp(s.deposit)}</td>
+                    <td className="py-1 pr-2 text-right">{s.withdraw > 0 ? fmtRp(s.withdraw) : '-'}</td>
+                    <td className="py-1 text-right font-medium">{fmtRp(s.net)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {securities.length === 0 && !loading ? (
         <p className="text-sm text-amber-600 mb-4">
