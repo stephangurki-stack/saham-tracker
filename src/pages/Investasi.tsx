@@ -12,7 +12,7 @@ const fmtPct = (n: number) => (n >= 0 ? '+' : '') + (n * 100).toFixed(1) + '%'
 
 export default function Investasi() {
   const { user } = useAuth()
-  const { holdingsGabungan, prices } = usePortfolioData()
+  const { holdingsGabungan, holdingsBySecurity, cashBalanceBySecurity, prices } = usePortfolioData()
   const { hidden } = usePrivacyMode()
   const fmtRp = (n: number) => (hidden ? 'Rp ••••••' : 'Rp ' + Math.round(n).toLocaleString('id-ID'))
 
@@ -92,7 +92,13 @@ export default function Investasi() {
       const flowsForSecurity = cashFlows.filter((c) => c.security_id === s.id)
       const deposit = flowsForSecurity.filter((c) => c.tipe === 'deposit').reduce((sum, c) => sum + c.jumlah, 0)
       const withdraw = flowsForSecurity.filter((c) => c.tipe === 'withdraw').reduce((sum, c) => sum + c.jumlah, 0)
-      return { id: s.id, nama: s.nama, deposit, withdraw, net: deposit - withdraw }
+      const net = deposit - withdraw
+      const stockValue = holdingsBySecurity
+        .filter((h) => h.security_id === s.id && h.lot > 0)
+        .reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
+      const nilaiSekarang = stockValue + (cashBalanceBySecurity[s.id] ?? 0)
+      const returnPct = net > 0 ? (nilaiSekarang - net) / net : null
+      return { id: s.id, nama: s.nama, deposit, withdraw, net, nilaiSekarang, returnPct }
     })
     .filter((s) => s.deposit > 0 || s.withdraw > 0)
 
@@ -150,7 +156,9 @@ export default function Investasi() {
                   <th className="py-1 pr-2">Sekuritas</th>
                   <th className="py-1 pr-2 text-right">Setor</th>
                   <th className="py-1 pr-2 text-right">Tarik</th>
-                  <th className="py-1 text-right">Net</th>
+                  <th className="py-1 pr-2 text-right">Net</th>
+                  <th className="py-1 pr-2 text-right">Nilai Sekarang</th>
+                  <th className="py-1 text-right">Return</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,7 +167,15 @@ export default function Investasi() {
                     <td className="py-1 pr-2 font-medium">{s.nama}</td>
                     <td className="py-1 pr-2 text-right">{fmtRp(s.deposit)}</td>
                     <td className="py-1 pr-2 text-right">{s.withdraw > 0 ? fmtRp(s.withdraw) : '-'}</td>
-                    <td className="py-1 text-right font-medium">{fmtRp(s.net)}</td>
+                    <td className="py-1 pr-2 text-right font-medium">{fmtRp(s.net)}</td>
+                    <td className="py-1 pr-2 text-right font-medium">{fmtRp(s.nilaiSekarang)}</td>
+                    <td
+                      className={`py-1 text-right font-medium ${
+                        s.returnPct !== null && s.returnPct >= 0 ? 'text-emerald-600' : 'text-red-600'
+                      }`}
+                    >
+                      {s.returnPct !== null ? fmtPct(s.returnPct) : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
