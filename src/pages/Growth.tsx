@@ -92,6 +92,9 @@ export default function Growth() {
   }
   rows.sort((a, b) => b.year - a.year)
 
+  const growthValues = rows.map((r) => r.growthPct).filter((g): g is number => g !== null)
+  const avgGrowth = growthValues.length > 0 ? growthValues.reduce((s, g) => s + g, 0) / growthValues.length : null
+
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
       <Link to="/" className="text-sm text-slate-600 hover:text-slate-800">
@@ -104,6 +107,20 @@ export default function Growth() {
           investasi
         </p>
       </div>
+
+      {avgGrowth !== null && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Rata-rata Growth per Tahun</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Rata-rata dari {growthValues.length} tahun ({rows[rows.length - 1].year}–{rows[0].year})
+            </p>
+          </div>
+          <p className="text-lg font-semibold" style={{ color: avgGrowth >= 0 ? STATUS.good : STATUS.critical }}>
+            {fmtPct(avgGrowth)}
+          </p>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <p className="text-slate-600 text-sm">
