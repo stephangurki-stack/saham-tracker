@@ -15,6 +15,7 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -71,7 +72,7 @@ export default function Transactions() {
       return
     }
 
-    const { error: txErr } = await supabase.from('transactions').insert({
+    const payload = {
       user_id: user.id,
       security_id: securityId,
       ticker: tickerUpper,
@@ -80,7 +81,11 @@ export default function Transactions() {
       harga: hargaNum,
       lot: lotNum,
       fee: feeNum,
-    })
+    }
+
+    const { error: txErr } = editingId
+      ? await supabase.from('transactions').update(payload).eq('id', editingId)
+      : await supabase.from('transactions').insert(payload)
 
     if (txErr) {
       setError(txErr.message)
@@ -88,12 +93,30 @@ export default function Transactions() {
       return
     }
 
+    resetForm()
+    setSubmitting(false)
+    load()
+  }
+
+  function resetForm() {
+    setEditingId(null)
     setTicker('')
     setHarga('')
     setLot('')
     setFee('0')
-    setSubmitting(false)
-    load()
+  }
+
+  function startEdit(tx: Transaction) {
+    setError(null)
+    setEditingId(tx.id)
+    setSecurityId(tx.security_id)
+    setTicker(tx.ticker)
+    setTipe(tx.tipe)
+    setTanggal(tx.tanggal)
+    setHarga(String(tx.harga))
+    setLot(String(tx.lot))
+    setFee(String(tx.fee))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function handleDelete(id: string) {
@@ -115,6 +138,14 @@ export default function Transactions() {
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
+          {editingId && (
+            <p className="text-xs text-blue-600">
+              Mengedit transaksi {ticker}.{' '}
+              <button type="button" onClick={resetForm} className="underline hover:text-blue-700">
+                Batal
+              </button>
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-slate-600 mb-1">Sekuritas</label>
@@ -195,7 +226,7 @@ export default function Transactions() {
             disabled={submitting}
             className="w-full rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2"
           >
-            Catat Transaksi
+            {editingId ? 'Update Transaksi' : 'Catat Transaksi'}
           </button>
         </form>
       )}
@@ -230,11 +261,11 @@ export default function Transactions() {
                   <td className="py-1 pr-2">{fmtNum(tx.harga)}</td>
                   <td className="py-1 pr-2">{tx.lot}</td>
                   <td className="py-1 pr-2">{securityName(tx.security_id)}</td>
-                  <td className="py-1">
-                    <button
-                      onClick={() => handleDelete(tx.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
+                  <td className="py-1 whitespace-nowrap">
+                    <button onClick={() => startEdit(tx)} className="text-blue-600 hover:text-blue-700 mr-3">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(tx.id)} className="text-red-600 hover:text-red-700">
                       Hapus
                     </button>
                   </td>
