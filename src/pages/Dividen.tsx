@@ -327,7 +327,6 @@ export default function Dividen() {
         isManual: manualPerLembar !== null,
       }
     })
-    .filter((r) => r.proyeksi !== null)
     .sort((a, b) => (b.proyeksi ?? 0) - (a.proyeksi ?? 0))
   const totalProyeksi = projeksiPerSaham.reduce((s, r) => s + (r.proyeksi ?? 0), 0)
 
@@ -621,7 +620,7 @@ export default function Dividen() {
                         />
                       ) : (
                         <>
-                          {fmtNum(r.perLembar ?? 0)}
+                          {r.perLembar !== null ? fmtNum(r.perLembar) : <span className="text-slate-400">-</span>}
                           {r.isManual && <span className="text-xs text-blue-600 ml-1">(manual)</span>}
                         </>
                       )}
