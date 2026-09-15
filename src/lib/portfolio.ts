@@ -9,6 +9,7 @@ interface RunningPosition {
   lot: number
   avgBuyPrice: number
   realizedGain: number
+  firstBuyDate: string | null
 }
 
 function sortByDateThenCreatedAt(transactions: Transaction[]): Transaction[] {
@@ -37,9 +38,11 @@ export function computeHoldingsBySecurity(transactions: Transaction[]): Holding[
       lot: 0,
       avgBuyPrice: 0,
       realizedGain: 0,
+      firstBuyDate: null,
     }
 
     if (tx.tipe === 'buy') {
+      if (pos.lot === 0) pos.firstBuyDate = tx.tanggal
       const costBefore = pos.avgBuyPrice * pos.lot * LOT_SIZE
       const costThisBuy = tx.harga * tx.lot * LOT_SIZE + tx.fee
       const newLot = pos.lot + tx.lot
@@ -51,7 +54,10 @@ export function computeHoldingsBySecurity(transactions: Transaction[]): Holding[
       const costOfSold = pos.avgBuyPrice * sellLot * LOT_SIZE
       pos.realizedGain += proceeds - costOfSold
       pos.lot -= sellLot
-      if (pos.lot === 0) pos.avgBuyPrice = 0
+      if (pos.lot === 0) {
+        pos.avgBuyPrice = 0
+        pos.firstBuyDate = null
+      }
     }
 
     positions.set(key, pos)
@@ -64,7 +70,16 @@ export function computeHoldingsBySecurity(transactions: Transaction[]): Holding[
     avgBuyPrice: pos.avgBuyPrice,
     costBasis: pos.avgBuyPrice * pos.lot * LOT_SIZE,
     realizedGain: pos.realizedGain,
+    firstBuyDate: pos.firstBuyDate,
   }))
+}
+
+/** Earlier of two currently-held first-buy dates; ignores a side that's fully sold (lot 0). */
+function earliestHeldDate(a: Holding, b: Holding): string | null {
+  const aDate = a.lot > 0 ? a.firstBuyDate : null
+  const bDate = b.lot > 0 ? b.firstBuyDate : null
+  if (aDate && bDate) return aDate < bDate ? aDate : bDate
+  return aDate ?? bDate
 }
 
 /** Combines per-security holdings into one gabungan position per ticker. */
@@ -79,6 +94,7 @@ export function aggregateHoldingsByTicker(holdings: Holding[]): Holding[] {
     }
     const totalLot = existing.lot + h.lot
     const totalCost = existing.costBasis + h.costBasis
+    existing.firstBuyDate = earliestHeldDate(existing, h)
     existing.lot = totalLot
     existing.avgBuyPrice = totalLot > 0 ? totalCost / (totalLot * LOT_SIZE) : 0
     existing.costBasis = totalCost

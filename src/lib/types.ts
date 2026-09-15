@@ -33,6 +33,8 @@ export interface Holding {
   avgBuyPrice: number
   costBasis: number
   realizedGain: number
+  /** Date of the buy that opened the currently-held lot (resets if the position was ever fully sold and rebought). Null if lot is 0. */
+  firstBuyDate: string | null
 }
 
 export type CashFlowType = 'deposit' | 'withdraw'

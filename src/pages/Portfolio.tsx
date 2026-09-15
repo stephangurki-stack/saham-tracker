@@ -8,6 +8,20 @@ import type { Holding } from '../lib/types'
 
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
+function holdingDuration(dateStr: string): string {
+  const start = new Date(dateStr)
+  const now = new Date()
+  let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+  if (now.getDate() < start.getDate()) months -= 1
+  if (months < 0) months = 0
+  const years = Math.floor(months / 12)
+  const remMonths = months % 12
+  if (years === 0 && remMonths === 0) return '<1 bln'
+  if (years === 0) return `${remMonths} bln`
+  if (remMonths === 0) return `${years} thn`
+  return `${years} thn ${remMonths} bln`
+}
+
 function HoldingsTable({
   holdings,
   prices,
@@ -32,6 +46,7 @@ function HoldingsTable({
         <thead className="text-slate-600 text-left">
           <tr>
             <th className="py-1 pr-3">Ticker</th>
+            <th className="py-1 pr-3">Sejak</th>
             <th className="py-1 pr-3">Lot</th>
             <th className="py-1 pr-3">Avg Buy</th>
             <th className="py-1 pr-3">Harga Now</th>
@@ -54,6 +69,16 @@ function HoldingsTable({
             return (
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200">
                 <td className="py-1 pr-3 font-medium">{h.ticker}</td>
+                <td className="py-1 pr-3 text-slate-500 whitespace-nowrap">
+                  {h.firstBuyDate ? (
+                    <>
+                      {new Date(h.firstBuyDate).getFullYear()}
+                      <span className="text-xs text-slate-400"> ({holdingDuration(h.firstBuyDate)})</span>
+                    </>
+                  ) : (
+                    '-'
+                  )}
+                </td>
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
