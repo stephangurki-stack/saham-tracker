@@ -85,6 +85,7 @@ export default function Dividen() {
 
   function resetForm() {
     setEditingId(null)
+    setEntryMode('gabungan')
     setTicker('')
     setTanggalBayar(todayISO())
     setJumlahPerLembar('')
@@ -424,29 +425,6 @@ export default function Dividen() {
               </button>
             </p>
           )}
-          {!editingId && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setEntryMode('gabungan')}
-                className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
-                  entryMode === 'gabungan' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                Semua Sekuritas (otomatis)
-              </button>
-              <button
-                type="button"
-                onClick={() => setEntryMode('single')}
-                className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
-                  entryMode === 'single' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                Per Sekuritas
-              </button>
-            </div>
-          )}
-
           {entryMode === 'gabungan' && !editingId ? (
             <>
               <p className="text-xs text-slate-400">
