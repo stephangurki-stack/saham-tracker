@@ -30,6 +30,7 @@ export default function Dividen() {
   const [savingProjection, setSavingProjection] = useState(false)
   const [showAllDividends, setShowAllDividends] = useState(false)
   const [rekapTab, setRekapTab] = useState<string>('gabungan')
+  const [entryMode, setEntryMode] = useState<'gabungan' | 'single'>('gabungan')
 
   const [securityId, setSecurityId] = useState('')
   const [ticker, setTicker] = useState('')
@@ -39,6 +40,12 @@ export default function Dividen() {
   const [total, setTotal] = useState('')
 
   const heldForSecurity = holdingsBySecurity.filter((h) => h.security_id === securityId && h.lot > 0)
+  const heldGabungan = holdingsGabungan.filter((h) => h.lot > 0)
+  const gabunganBreakdown = ticker
+    ? holdingsBySecurity
+        .filter((h) => h.ticker === ticker && h.lot > 0)
+        .map((h) => ({ security_id: h.security_id, lot: h.lot }))
+    : []
 
   function handleSecurityChange(id: string) {
     setSecurityId(id)
@@ -87,6 +94,7 @@ export default function Dividen() {
 
   function startEdit(d: Dividend) {
     setError(null)
+    setEntryMode('single')
     setEditingId(d.id)
     setSecurityId(d.security_id)
     setTicker(d.ticker)
@@ -146,10 +154,9 @@ export default function Dividen() {
     setError(null)
     const tickerUpper = ticker.trim().toUpperCase()
     const perLembarNum = Number(jumlahPerLembar)
-    const totalNum = Number(total)
 
-    if (!securityId || !tickerUpper || !perLembarNum || !totalNum) {
-      setError('Isi semua field yang wajib (sekuritas, ticker, jumlah per lembar, total).')
+    if (!tickerUpper || !perLembarNum) {
+      setError('Isi ticker dan Rp/Lembar dengan angka valid.')
       return
     }
     if (!user) return
@@ -161,6 +168,39 @@ export default function Dividen() {
       .upsert({ ticker: tickerUpper }, { onConflict: 'ticker', ignoreDuplicates: true })
     if (stockErr) {
       setError(stockErr.message)
+      setSubmitting(false)
+      return
+    }
+
+    if (entryMode === 'gabungan' && !editingId) {
+      const holders = holdingsBySecurity.filter((h) => h.ticker === tickerUpper && h.lot > 0)
+      if (holders.length === 0) {
+        setError(`Tidak ada sekuritas yang memegang ${tickerUpper}.`)
+        setSubmitting(false)
+        return
+      }
+      const payloads = holders.map((h) => ({
+        user_id: user.id,
+        security_id: h.security_id,
+        ticker: tickerUpper,
+        tanggal_bayar: tanggalBayar,
+        jumlah_per_lembar: perLembarNum,
+        lot: h.lot,
+        total: Math.round(perLembarNum * h.lot * LOT_SIZE),
+      }))
+      const { error: divErr } = await supabase.from('dividends').insert(payloads)
+      if (divErr) setError(divErr.message)
+      else {
+        resetForm()
+        load()
+      }
+      setSubmitting(false)
+      return
+    }
+
+    const totalNum = Number(total)
+    if (!securityId || !totalNum) {
+      setError('Isi semua field yang wajib (sekuritas, ticker, jumlah per lembar, total).')
       setSubmitting(false)
       return
     }
@@ -384,93 +424,186 @@ export default function Dividen() {
               </button>
             </p>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Sekuritas</label>
-              <select
-                value={securityId}
-                onChange={(e) => handleSecurityChange(e.target.value)}
-                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+          {!editingId && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEntryMode('gabungan')}
+                className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
+                  entryMode === 'gabungan' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                }`}
               >
-                {securities.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nama}
-                  </option>
-                ))}
-              </select>
+                Semua Sekuritas (otomatis)
+              </button>
+              <button
+                type="button"
+                onClick={() => setEntryMode('single')}
+                className={`px-3 py-1.5 rounded-md text-xs whitespace-nowrap ${
+                  entryMode === 'single' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                }`}
+              >
+                Per Sekuritas
+              </button>
             </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Ticker</label>
-              {heldForSecurity.length > 0 ? (
+          )}
+
+          {entryMode === 'gabungan' && !editingId ? (
+            <>
+              <p className="text-xs text-slate-400">
+                Satu kali input, otomatis terdistribusi ke tiap sekuritas sesuai porsi lot yang dipegang.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-600 mb-1">Ticker</label>
+                  <select
+                    value={heldGabungan.some((h) => h.ticker === ticker) ? ticker : ''}
+                    onChange={(e) => setTicker(e.target.value)}
+                    className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                  >
+                    <option value="" disabled>
+                      Pilih ticker
+                    </option>
+                    {heldGabungan.map((h) => (
+                      <option key={h.ticker} value={h.ticker}>
+                        {h.ticker} ({h.lot} lot gabungan)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-600 mb-1">Tanggal Bayar</label>
+                  <input
+                    type="date"
+                    value={tanggalBayar}
+                    onChange={(e) => setTanggalBayar(e.target.value)}
+                    className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-600 mb-1">Rp / Lembar</label>
+                  <input
+                    type="number"
+                    value={jumlahPerLembar}
+                    onChange={(e) => setJumlahPerLembar(e.target.value)}
+                    className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                  />
+                </div>
+              </div>
+
+              {ticker &&
+                (gabunganBreakdown.length > 0 ? (
+                  <div className="rounded-md bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 space-y-1">
+                    <p className="font-medium text-slate-700 mb-1">Distribusi otomatis per sekuritas</p>
+                    {gabunganBreakdown.map((b) => (
+                      <div key={b.security_id} className="flex justify-between">
+                        <span>
+                          {securityName(b.security_id)} ({b.lot} lot)
+                        </span>
+                        <span>{fmtNum(b.lot * LOT_SIZE * (Number(jumlahPerLembar) || 0))}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-slate-200">
+                      <span>Total</span>
+                      <span>
+                        {fmtNum(
+                          gabunganBreakdown.reduce((s, b) => s + b.lot * LOT_SIZE * (Number(jumlahPerLembar) || 0), 0)
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-600">Tidak ada sekuritas yang memegang {ticker}.</p>
+                ))}
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Sekuritas</label>
                 <select
-                  value={heldForSecurity.some((h) => h.ticker === ticker) ? ticker : '__manual__'}
-                  onChange={(e) =>
-                    e.target.value === '__manual__' ? setTicker('') : handleTickerChange(e.target.value)
-                  }
+                  value={securityId}
+                  onChange={(e) => handleSecurityChange(e.target.value)}
                   className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
                 >
-                  {heldForSecurity.map((h) => (
-                    <option key={h.ticker} value={h.ticker}>
-                      {h.ticker} ({h.lot} lot)
+                  {securities.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nama}
                     </option>
                   ))}
-                  <option value="__manual__">Ticker lain (ketik manual)</option>
                 </select>
-              ) : (
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Ticker</label>
+                {heldForSecurity.length > 0 ? (
+                  <select
+                    value={heldForSecurity.some((h) => h.ticker === ticker) ? ticker : '__manual__'}
+                    onChange={(e) =>
+                      e.target.value === '__manual__' ? setTicker('') : handleTickerChange(e.target.value)
+                    }
+                    className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                  >
+                    {heldForSecurity.map((h) => (
+                      <option key={h.ticker} value={h.ticker}>
+                        {h.ticker} ({h.lot} lot)
+                      </option>
+                    ))}
+                    <option value="__manual__">Ticker lain (ketik manual)</option>
+                  </select>
+                ) : (
+                  <input
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value)}
+                    placeholder="BBCA"
+                    className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
+                  />
+                )}
+                {heldForSecurity.length > 0 && !heldForSecurity.some((h) => h.ticker === ticker) && (
+                  <input
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value)}
+                    placeholder="Ketik ticker"
+                    className="w-full mt-2 rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Tanggal Bayar</label>
                 <input
-                  value={ticker}
-                  onChange={(e) => setTicker(e.target.value)}
-                  placeholder="BBCA"
-                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
+                  type="date"
+                  value={tanggalBayar}
+                  onChange={(e) => setTanggalBayar(e.target.value)}
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
                 />
-              )}
-              {heldForSecurity.length > 0 && !heldForSecurity.some((h) => h.ticker === ticker) && (
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Lot</label>
                 <input
-                  value={ticker}
-                  onChange={(e) => setTicker(e.target.value)}
-                  placeholder="Ketik ticker"
-                  className="w-full mt-2 rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900 uppercase"
+                  type="number"
+                  value={lot}
+                  onChange={(e) => handleLotChange(e.target.value)}
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
                 />
-              )}
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Rp / Lembar</label>
+                <input
+                  type="number"
+                  value={jumlahPerLembar}
+                  onChange={(e) => handlePerLembarChange(e.target.value)}
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Total Diterima (Rp)</label>
+                <input
+                  type="number"
+                  value={total}
+                  onChange={(e) => setTotal(e.target.value)}
+                  className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+                />
+                <p className="text-xs text-slate-400 mt-1">Auto dari Lot × Rp/Lembar, bisa diedit (mis. setelah pajak)</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Tanggal Bayar</label>
-              <input
-                type="date"
-                value={tanggalBayar}
-                onChange={(e) => setTanggalBayar(e.target.value)}
-                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Lot</label>
-              <input
-                type="number"
-                value={lot}
-                onChange={(e) => handleLotChange(e.target.value)}
-                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Rp / Lembar</label>
-              <input
-                type="number"
-                value={jumlahPerLembar}
-                onChange={(e) => handlePerLembarChange(e.target.value)}
-                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Total Diterima (Rp)</label>
-              <input
-                type="number"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
-                className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
-              />
-              <p className="text-xs text-slate-400 mt-1">Auto dari Lot × Rp/Lembar, bisa diedit (mis. setelah pajak)</p>
-            </div>
-          </div>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -479,7 +612,7 @@ export default function Dividen() {
             disabled={submitting}
             className="w-full rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2"
           >
-            {editingId ? 'Update Dividen' : 'Catat Dividen'}
+            {editingId ? 'Update Dividen' : entryMode === 'gabungan' ? 'Catat Dividen ke Semua Sekuritas' : 'Catat Dividen'}
           </button>
         </form>
       )}
