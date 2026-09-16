@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { usePortfolioData } from '../hooks/usePortfolioData'
 import { usePrivacyMode } from '../hooks/usePrivacyMode'
-import { LOT_SIZE } from '../lib/portfolio'
+import { LOT_SIZE, marketValue } from '../lib/portfolio'
 import type { Dividend, DividendProjection, DividendTarget, Security } from '../lib/types'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -11,7 +11,7 @@ const fmtPct = (n: number) => (n * 100).toFixed(2) + '%'
 
 export default function Dividen() {
   const { user } = useAuth()
-  const { holdingsGabungan, holdingsBySecurity } = usePortfolioData()
+  const { holdingsGabungan, holdingsBySecurity, prices } = usePortfolioData()
   const { hidden } = usePrivacyMode()
   const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
 
@@ -328,15 +328,16 @@ export default function Dividen() {
   }
   const rekapPerSaham = [...perSahamTotal.entries()].map(([tk, totalDiterima]) => {
     const holding = holdingsForRekap.find((h) => h.ticker === tk && h.lot > 0)
-    const costBasis = holding && holding.costBasis > 0 ? holding.costBasis : null
+    const price = prices[tk] ?? 0
+    const nilaiSekarang = holding && price > 0 ? marketValue(holding, price) : null
     const tahunIni = perSahamTahunIni.get(tk) ?? 0
     return {
       ticker: tk,
-      costBasis,
+      nilaiSekarang,
       totalDiterima,
-      yieldTotalPct: costBasis ? totalDiterima / costBasis : null,
+      yieldTotalPct: nilaiSekarang ? totalDiterima / nilaiSekarang : null,
       tahunIni,
-      yieldTahunIniPct: costBasis ? tahunIni / costBasis : null,
+      yieldTahunIniPct: nilaiSekarang ? tahunIni / nilaiSekarang : null,
     }
   })
   const rekapTotalKeseluruhan = rekapPerSaham.reduce((s, r) => s + r.totalDiterima, 0)
@@ -599,7 +600,7 @@ export default function Dividen() {
         <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
           <p className="text-sm font-medium text-slate-700 mb-1">Rekap Dividen per Saham</p>
           <p className="text-xs text-slate-400 mb-2">
-            Yield dihitung terhadap cost basis (modal tertanam) saham tersebut saat ini
+            Yield dihitung terhadap nilai pasar (valuasi) saham tersebut saat ini
           </p>
           <div className="flex gap-2 mb-3 overflow-x-auto">
             <button
