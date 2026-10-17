@@ -8,28 +8,16 @@ import type { Holding } from '../lib/types'
 
 const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
 
-function holdingDuration(dateStr: string): string {
-  const start = new Date(dateStr)
-  const now = new Date()
-  let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
-  if (now.getDate() < start.getDate()) months -= 1
-  if (months < 0) months = 0
-  const years = Math.floor(months / 12)
-  const remMonths = months % 12
-  if (years === 0 && remMonths === 0) return '<1 bln'
-  if (years === 0) return `${remMonths} bln`
-  if (remMonths === 0) return `${years} thn`
-  return `${years} thn ${remMonths} bln`
-}
-
 function HoldingsTable({
   holdings,
   prices,
   fairValues,
+  dividendByTicker,
 }: {
   holdings: Holding[]
   prices: Record<string, number>
   fairValues: Record<string, number>
+  dividendByTicker: Record<string, number>
 }) {
   const { hidden } = usePrivacyMode()
   const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
@@ -46,7 +34,7 @@ function HoldingsTable({
         <thead className="text-slate-600 text-left">
           <tr>
             <th className="py-1 pr-3">Ticker</th>
-            <th className="py-1 pr-3">Sejak</th>
+            <th className="py-1 pr-3">Tahun Pembelian</th>
             <th className="py-1 pr-3">Lot</th>
             <th className="py-1 pr-3">Avg Buy</th>
             <th className="py-1 pr-3">Harga Now</th>
@@ -56,7 +44,8 @@ function HoldingsTable({
             <th className="py-1 pr-3">%</th>
             <th className="py-1 pr-3">Bobot</th>
             <th className="py-1 pr-3">Nilai Wajar</th>
-            <th className="py-1">vs Nilai Wajar</th>
+            <th className="py-1 pr-3">vs Nilai Wajar</th>
+            <th className="py-1">Dividen Diterima</th>
           </tr>
         </thead>
         <tbody>
@@ -72,14 +61,7 @@ function HoldingsTable({
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200">
                 <td className="py-1 pr-3 font-medium">{h.ticker}</td>
                 <td className="py-1 pr-3 text-slate-500 whitespace-nowrap">
-                  {h.firstBuyDate ? (
-                    <>
-                      {new Date(h.firstBuyDate).getFullYear()}
-                      <span className="text-xs text-slate-400"> ({holdingDuration(h.firstBuyDate)})</span>
-                    </>
-                  ) : (
-                    '-'
-                  )}
+                  {h.firstBuyDate ? new Date(h.firstBuyDate).getFullYear() : '-'}
                 </td>
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
@@ -96,9 +78,10 @@ function HoldingsTable({
                 <td className={`py-1 pr-3 ${fairValue ? '' : 'text-slate-400'}`}>
                   {fairValue ? fmtNum(fairValue) : '-'}
                 </td>
-                <td className={`py-1 ${mos === null ? 'text-slate-400' : mos >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <td className={`py-1 pr-3 ${mos === null ? 'text-slate-400' : mos >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {mos !== null ? (mos >= 0 ? '+' : '') + fmtPct(mos) : 'Belum ada'}
                 </td>
+                <td className="py-1">{dividendByTicker[h.ticker] ? fmtNum(dividendByTicker[h.ticker]) : '-'}</td>
               </tr>
             )
           })}
@@ -116,6 +99,7 @@ export default function Portfolio() {
     prices,
     cashBalance,
     cashBalanceBySecurity,
+    dividends,
     loading,
     error,
     refresh,
@@ -128,6 +112,13 @@ export default function Portfolio() {
   const fairValues: Record<string, number> = Object.fromEntries(
     watchlistRows.filter((r) => r.nilai_wajar !== null).map((r) => [r.ticker, r.nilai_wajar as number])
   )
+
+  const dividendByTicker: Record<string, number> = {}
+  for (const d of dividends) {
+    if (tab === 'gabungan' || d.security_id === tab) {
+      dividendByTicker[d.ticker] = (dividendByTicker[d.ticker] ?? 0) + d.total
+    }
+  }
 
   const holdingsForTab = tab === 'gabungan' ? holdingsGabungan : holdingsBySecurity.filter((h) => h.security_id === tab)
   const cashForTab = tab === 'gabungan' ? cashBalance : cashBalanceBySecurity[tab] ?? 0
@@ -195,7 +186,12 @@ export default function Portfolio() {
       {loading ? (
         <p className="text-slate-600 text-sm">Memuat...</p>
       ) : (
-        <HoldingsTable holdings={holdingsForTab} prices={prices} fairValues={fairValues} />
+        <HoldingsTable
+          holdings={holdingsForTab}
+          prices={prices}
+          fairValues={fairValues}
+          dividendByTicker={dividendByTicker}
+        />
       )}
     </div>
   )
