@@ -32,9 +32,13 @@ export default function Dashboard() {
 
   const held = holdingsGabungan.filter((h) => h.lot > 0)
   const ownedTickers = new Set(held.map((h) => h.ticker))
-  const buyCandidates = watchlistWithMos.filter(
-    (w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS && !ownedTickers.has(w.row.ticker)
-  )
+  const buyCandidates = watchlistWithMos
+    .filter((w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS)
+    .sort((a, b) => (b.mos ?? 0) - (a.mos ?? 0))
+  const fmtCandidates = (list: typeof buyCandidates) =>
+    list.map((c) => `${c.row.ticker} (+${(c.mos! * 100).toFixed(1)}%)`).join(', ')
+  const candidatesOwned = buyCandidates.filter((c) => ownedTickers.has(c.row.ticker))
+  const candidatesNotOwned = buyCandidates.filter((c) => !ownedTickers.has(c.row.ticker))
   const stockValue = held.reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
   const totalCost = held.reduce((sum, h) => sum + h.costBasis, 0)
   const totalGain = stockValue - totalCost
@@ -150,11 +154,18 @@ export default function Dashboard() {
           className="block bg-emerald-50 border border-emerald-300 rounded-lg p-4 hover:border-emerald-500"
         >
           <p className="text-sm font-medium text-emerald-600 mb-1">
-            {buyCandidates.length} saham watchlist mencapai margin of safety ≥ {(BUY_THRESHOLD_MOS * 100).toFixed(0)}%
+            {buyCandidates.length} saham mencapai margin of safety ≥ {(BUY_THRESHOLD_MOS * 100).toFixed(0)}%
           </p>
-          <p className="text-xs text-emerald-700">
-            {buyCandidates.map((c) => `${c.row.ticker} (+${(c.mos! * 100).toFixed(1)}%)`).join(', ')}
-          </p>
+          {candidatesNotOwned.length > 0 && (
+            <p className="text-xs text-emerald-700">
+              <span className="font-medium">Watchlist:</span> {fmtCandidates(candidatesNotOwned)}
+            </p>
+          )}
+          {candidatesOwned.length > 0 && (
+            <p className="text-xs text-emerald-700 mt-1">
+              <span className="font-medium">Di portofolio:</span> {fmtCandidates(candidatesOwned)}
+            </p>
+          )}
         </Link>
       )}
 
