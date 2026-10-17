@@ -50,12 +50,12 @@ function HoldingsTable({
             <th className="py-1 pr-3">Lot</th>
             <th className="py-1 pr-3">Avg Buy</th>
             <th className="py-1 pr-3">Harga Now</th>
-            <th className="py-1 pr-3">Harga Wajar</th>
             <th className="py-1 pr-3">Nilai Investasi</th>
-            <th className="py-1 pr-3">Nilai Sekarang</th>
+            <th className="py-1 pr-3">Market Value</th>
             <th className="py-1 pr-3">Unrealized P/L</th>
             <th className="py-1 pr-3">%</th>
             <th className="py-1 pr-3">Bobot</th>
+            <th className="py-1 pr-3">Nilai Wajar</th>
             <th className="py-1">vs Nilai Wajar</th>
           </tr>
         </thead>
@@ -84,9 +84,6 @@ function HoldingsTable({
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
-                <td className={`py-1 pr-3 ${fairValue ? '' : 'text-slate-400'}`}>
-                  {fairValue ? fmtNum(fairValue) : '-'}
-                </td>
                 <td className="py-1 pr-3">{fmtNum(h.costBasis)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(value) : '-'}</td>
                 <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
@@ -96,6 +93,9 @@ function HoldingsTable({
                   {fmtPct(gainPct)}
                 </td>
                 <td className="py-1 pr-3">{fmtPct(weight)}</td>
+                <td className={`py-1 pr-3 ${fairValue ? '' : 'text-slate-400'}`}>
+                  {fairValue ? fmtNum(fairValue) : '-'}
+                </td>
                 <td className={`py-1 ${mos === null ? 'text-slate-400' : mos >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {mos !== null ? (mos >= 0 ? '+' : '') + fmtPct(mos) : 'Belum ada'}
                 </td>
