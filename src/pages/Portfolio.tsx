@@ -41,10 +41,10 @@ function HoldingsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm table-fixed min-w-[520px]">
+      <table className="w-full text-sm table-fixed">
         <colgroup>
-          <col style={{ width: '6%' }} />
-          <col style={{ width: '16%' }} />
+          <col style={{ width: '5%' }} />
+          <col style={{ width: '17%' }} />
           <col style={{ width: '14%' }} />
           <col style={{ width: '17%' }} />
           <col style={{ width: '16%' }} />
@@ -75,7 +75,7 @@ function HoldingsTable({
             const dividend = dividendByTicker[h.ticker]
             return (
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200 align-top">
-                <td className="py-2 px-1.5 text-left text-slate-400">{i + 1}</td>
+                <td className="py-2 pl-0 pr-1 text-left text-slate-400">{i + 1}</td>
                 <td className="py-2 px-1.5 text-left">
                   <span className="font-medium">{h.ticker}</span>
                   <span className={sub}>
@@ -98,7 +98,7 @@ function HoldingsTable({
                   {fairValue ? fmtNum(fairValue) : <span className="text-slate-400">-</span>}
                   {mos !== null && (
                     <span
-                      className={`mt-0.5 inline-block rounded px-1.5 text-xs ${
+                      className={`mt-0.5 ml-auto block w-fit rounded px-1.5 text-xs ${
                         mos >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
                       }`}
                     >
