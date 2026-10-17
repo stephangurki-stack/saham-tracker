@@ -23,6 +23,7 @@ const methodLabels: Record<ValuationMethod, string> = {
   per_pbv: 'PER / PBV Relatif',
   dcf: 'DCF Sederhana',
   ddm: 'Dividend Discount Model',
+  manual: 'Input Manual',
 }
 
 // Sensible starting points for IDX blue-chip-ish assumptions — user edits from here
@@ -56,6 +57,7 @@ export default function Watchlist() {
   const [nextDividend, setNextDividend] = useState('')
   const [ddmGrowthRate, setDdmGrowthRate] = useState('')
   const [ddmDiscountRate, setDdmDiscountRate] = useState('')
+  const [manualValue, setManualValue] = useState('')
 
   async function handleFetchFundamentals() {
     const tickerUpper = ticker.trim().toUpperCase()
@@ -109,6 +111,7 @@ export default function Watchlist() {
     setNextDividend('')
     setDdmGrowthRate('')
     setDdmDiscountRate('')
+    setManualValue('')
   }
 
   function startEdit(row: WatchlistRow) {
@@ -131,6 +134,8 @@ export default function Watchlist() {
       setGrowthRate(String(a.growthRate ?? ''))
       setDiscountRate(String(a.discountRate ?? ''))
       setTerminalGrowth(String(a.terminalGrowth ?? ''))
+    } else if (row.metode_valuasi === 'manual') {
+      setManualValue(String(a.nilaiWajar ?? ''))
     } else {
       setNextDividend(String(a.nextDividend ?? ''))
       setDdmDiscountRate(String(a.discountRate ?? ''))
@@ -163,6 +168,9 @@ export default function Watchlist() {
       }
       return { method, asumsi: a }
     }
+    if (method === 'manual') {
+      return { method, asumsi: { nilaiWajar: Number(manualValue) } }
+    }
     const a: DdmAssumptions = {
       nextDividend: Number(nextDividend),
       discountRate: Number(ddmDiscountRate),
@@ -175,6 +183,7 @@ export default function Watchlist() {
     if (method === 'graham') return !!eps && !!bvps
     if (method === 'per_pbv') return !!targetMultiple && (basis === 'per' ? !!eps : !!bvps)
     if (method === 'dcf') return !!fcf && !!growthRate && !!discountRate && !!terminalGrowth
+    if (method === 'manual') return !!manualValue
     return !!nextDividend && !!ddmDiscountRate && !!ddmGrowthRate
   }
 
@@ -348,6 +357,22 @@ export default function Watchlist() {
               <label className="block text-xs text-slate-600 mb-1">Terminal Growth (mis. 0.03)</label>
               <input type="number" step="0.01" value={terminalGrowth} onChange={(e) => setTerminalGrowth(e.target.value)} className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900" />
             </div>
+          </div>
+        )}
+
+        {method === 'manual' && (
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Nilai Wajar per Lembar (Rp)</label>
+            <input
+              type="number"
+              value={manualValue}
+              onChange={(e) => setManualValue(e.target.value)}
+              placeholder="Mis. 9500"
+              className="w-full rounded-md bg-slate-100 border border-slate-300 px-2 py-2 text-sm text-slate-900"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Isi langsung harga wajar hasil analisa sendiri (tanpa rumus otomatis).
+            </p>
           </div>
         )}
 

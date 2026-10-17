@@ -1,4 +1,4 @@
-export type ValuationMethod = 'graham' | 'per_pbv' | 'dcf' | 'ddm'
+export type ValuationMethod = 'graham' | 'per_pbv' | 'dcf' | 'ddm' | 'manual'
 
 /** Margin of safety threshold above which a watchlist stock is flagged as a buy candidate. */
 export const BUY_THRESHOLD_MOS = 0.3
@@ -29,11 +29,16 @@ export interface DdmAssumptions {
   growthRate: number
 }
 
+export interface ManualAssumptions {
+  nilaiWajar: number
+}
+
 export type ValuationAssumptions =
   | { method: 'graham'; asumsi: GrahamAssumptions }
   | { method: 'per_pbv'; asumsi: PerPbvAssumptions }
   | { method: 'dcf'; asumsi: DcfAssumptions }
   | { method: 'ddm'; asumsi: DdmAssumptions }
+  | { method: 'manual'; asumsi: ManualAssumptions }
 
 /** Benjamin Graham's formula: sqrt(22.5 * EPS * BVPS). Null if inputs can't yield a real number. */
 export function grahamNumber({ eps, bvps }: GrahamAssumptions): number | null {
@@ -88,6 +93,8 @@ export function computeFairValue(input: ValuationAssumptions): number | null {
       return simpleDcf(input.asumsi)
     case 'ddm':
       return ddm(input.asumsi)
+    case 'manual':
+      return input.asumsi.nilaiWajar > 0 ? input.asumsi.nilaiWajar : null
   }
 }
 

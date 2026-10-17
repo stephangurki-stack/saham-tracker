@@ -69,6 +69,11 @@ describe('computeFairValue', () => {
     const value = computeFairValue({ method: 'graham', asumsi: { eps: 100, bvps: 400 } })
     expect(value).toBeCloseTo(948.68, 1)
   })
+
+  it('returns the manually entered fair value as-is, and null if not positive', () => {
+    expect(computeFairValue({ method: 'manual', asumsi: { nilaiWajar: 9500 } })).toBe(9500)
+    expect(computeFairValue({ method: 'manual', asumsi: { nilaiWajar: 0 } })).toBeNull()
+  })
 })
 
 describe('marginOfSafety', () => {
