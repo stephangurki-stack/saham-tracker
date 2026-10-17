@@ -6,7 +6,7 @@ import { marketValue, portfolioWeights, unrealizedGain, unrealizedGainPct } from
 import { marginOfSafety } from '../lib/valuation'
 import type { Holding } from '../lib/types'
 
-const fmtPct = (n: number) => (n * 100).toFixed(1) + '%'
+const fmtPctDec = (n: number) => (n * 100).toFixed(1).replace('.', ',') + '%'
 
 function HoldingsTable({
   holdings,
@@ -20,7 +20,15 @@ function HoldingsTable({
   dividendByTicker: Record<string, number>
 }) {
   const { hidden } = usePrivacyMode()
-  const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
+  const fmtNum = (n: number) => (hidden ? '••••' : Math.round(n).toLocaleString('id-ID'))
+  const fmtCompact = (n: number) => {
+    if (hidden) return '••••'
+    const abs = Math.abs(n)
+    if (abs >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + 'M'
+    if (abs >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + 'jt'
+    return Math.round(n).toLocaleString('id-ID')
+  }
+  const fmtSigned = (n: number) => (n > 0 ? '+' : '') + fmtCompact(n)
   const held = holdings.filter((h) => h.lot > 0).sort((a, b) => a.ticker.localeCompare(b.ticker))
   const weights = portfolioWeights(held, prices)
 
@@ -28,24 +36,28 @@ function HoldingsTable({
     return <p className="text-slate-600 text-sm">Belum ada posisi terbuka.</p>
   }
 
+  const sub = 'block text-xs text-slate-400'
+  const th = 'py-2 px-1.5 font-normal text-xs text-slate-500 text-right'
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-slate-600 text-left">
+      <table className="w-full text-sm table-fixed min-w-[480px]">
+        <colgroup>
+          <col style={{ width: '17%' }} />
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '18%' }} />
+          <col style={{ width: '17%' }} />
+          <col style={{ width: '18%' }} />
+          <col style={{ width: '15%' }} />
+        </colgroup>
+        <thead className="border-b border-slate-300">
           <tr>
-            <th className="py-1 pr-3">Ticker</th>
-            <th className="py-1 pr-3">Tahun Pembelian</th>
-            <th className="py-1 pr-3">Lot</th>
-            <th className="py-1 pr-3">Avg Buy</th>
-            <th className="py-1 pr-3">Harga Now</th>
-            <th className="py-1 pr-3">Nilai Investasi</th>
-            <th className="py-1 pr-3">Market Value</th>
-            <th className="py-1 pr-3">Unrealized P/L</th>
-            <th className="py-1 pr-3">%</th>
-            <th className="py-1 pr-3">Bobot</th>
-            <th className="py-1 pr-3">Nilai Wajar</th>
-            <th className="py-1 pr-3">vs Nilai Wajar</th>
-            <th className="py-1">Dividen Diterima</th>
+            <th className={`${th} !text-left`}>Saham</th>
+            <th className={th}>Harga</th>
+            <th className={th}>Market Value</th>
+            <th className={th}>P/L</th>
+            <th className={th}>Nilai Wajar</th>
+            <th className={th}>Dividen</th>
           </tr>
         </thead>
         <tbody>
@@ -57,31 +69,44 @@ function HoldingsTable({
             const value = marketValue(h, price)
             const fairValue = fairValues[h.ticker]
             const mos = fairValue && price ? marginOfSafety(fairValue, price) : null
+            const gainColor = gain >= 0 ? 'text-emerald-600' : 'text-red-600'
+            const dividend = dividendByTicker[h.ticker]
             return (
-              <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200">
-                <td className="py-1 pr-3 font-medium">{h.ticker}</td>
-                <td className="py-1 pr-3 text-slate-500 whitespace-nowrap">
-                  {h.firstBuyDate ? new Date(h.firstBuyDate).getFullYear() : '-'}
+              <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200 align-top">
+                <td className="py-2 px-1.5 text-left">
+                  <span className="font-medium">{h.ticker}</span>
+                  <span className={sub}>
+                    {h.firstBuyDate ? new Date(h.firstBuyDate).getFullYear() : '-'} · {h.lot} lot
+                  </span>
                 </td>
-                <td className="py-1 pr-3">{h.lot}</td>
-                <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
-                <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
-                <td className="py-1 pr-3">{fmtNum(h.costBasis)}</td>
-                <td className="py-1 pr-3">{price ? fmtNum(value) : '-'}</td>
-                <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {fmtNum(gain)}
+                <td className="py-2 px-1.5 text-right">
+                  {price ? fmtNum(price) : '-'}
+                  <span className={sub}>Avg {fmtNum(h.avgBuyPrice)}</span>
                 </td>
-                <td className={`py-1 pr-3 ${gainPct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {fmtPct(gainPct)}
+                <td className="py-2 px-1.5 text-right">
+                  {price ? fmtCompact(value) : '-'}
+                  <span className={sub}>Modal {fmtCompact(h.costBasis)}</span>
                 </td>
-                <td className="py-1 pr-3">{fmtPct(weight)}</td>
-                <td className={`py-1 pr-3 ${fairValue ? '' : 'text-slate-400'}`}>
-                  {fairValue ? fmtNum(fairValue) : '-'}
+                <td className={`py-2 px-1.5 text-right ${gainColor}`}>
+                  {fmtSigned(gain)}
+                  <span className="block text-xs">{(gainPct > 0 ? '+' : '') + fmtPctDec(gainPct)}</span>
                 </td>
-                <td className={`py-1 pr-3 ${mos === null ? 'text-slate-400' : mos >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {mos !== null ? (mos >= 0 ? '+' : '') + fmtPct(mos) : 'Belum ada'}
+                <td className="py-2 px-1.5 text-right">
+                  {fairValue ? fmtNum(fairValue) : <span className="text-slate-400">-</span>}
+                  {mos !== null && (
+                    <span
+                      className={`mt-0.5 inline-block rounded px-1.5 text-xs ${
+                        mos >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                      }`}
+                    >
+                      {(mos >= 0 ? '+' : '') + fmtPctDec(mos)}
+                    </span>
+                  )}
                 </td>
-                <td className="py-1">{dividendByTicker[h.ticker] ? fmtNum(dividendByTicker[h.ticker]) : '-'}</td>
+                <td className="py-2 px-1.5 text-right">
+                  {dividend ? fmtCompact(dividend) : '-'}
+                  <span className={sub}>Bobot {fmtPctDec(weight)}</span>
+                </td>
               </tr>
             )
           })}
