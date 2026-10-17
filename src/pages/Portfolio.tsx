@@ -33,7 +33,7 @@ function HoldingsTable({
 }) {
   const { hidden } = usePrivacyMode()
   const fmtNum = (n: number) => (hidden ? '••••••' : Math.round(n).toLocaleString('id-ID'))
-  const held = holdings.filter((h) => h.lot > 0)
+  const held = holdings.filter((h) => h.lot > 0).sort((a, b) => a.ticker.localeCompare(b.ticker))
   const weights = portfolioWeights(held, prices)
 
   if (held.length === 0) {
@@ -50,6 +50,8 @@ function HoldingsTable({
             <th className="py-1 pr-3">Lot</th>
             <th className="py-1 pr-3">Avg Buy</th>
             <th className="py-1 pr-3">Harga Now</th>
+            <th className="py-1 pr-3">Harga Wajar</th>
+            <th className="py-1 pr-3">Nilai Investasi</th>
             <th className="py-1 pr-3">Nilai Sekarang</th>
             <th className="py-1 pr-3">Unrealized P/L</th>
             <th className="py-1 pr-3">%</th>
@@ -82,6 +84,10 @@ function HoldingsTable({
                 <td className="py-1 pr-3">{h.lot}</td>
                 <td className="py-1 pr-3">{fmtNum(h.avgBuyPrice)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(price) : '-'}</td>
+                <td className={`py-1 pr-3 ${fairValue ? '' : 'text-slate-400'}`}>
+                  {fairValue ? fmtNum(fairValue) : '-'}
+                </td>
+                <td className="py-1 pr-3">{fmtNum(h.costBasis)}</td>
                 <td className="py-1 pr-3">{price ? fmtNum(value) : '-'}</td>
                 <td className={`py-1 pr-3 ${gain >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtNum(gain)}
