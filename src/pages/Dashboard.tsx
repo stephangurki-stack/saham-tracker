@@ -35,8 +35,6 @@ export default function Dashboard() {
   const buyCandidates = watchlistWithMos
     .filter((w) => w.mos !== null && w.mos >= BUY_THRESHOLD_MOS)
     .sort((a, b) => (b.mos ?? 0) - (a.mos ?? 0))
-  const fmtCandidates = (list: typeof buyCandidates) =>
-    list.map((c) => `${c.row.ticker} (+${(c.mos! * 100).toFixed(1)}%)`).join(', ')
   const candidatesOwned = buyCandidates.filter((c) => ownedTickers.has(c.row.ticker))
   const candidatesNotOwned = buyCandidates.filter((c) => !ownedTickers.has(c.row.ticker))
   const stockValue = held.reduce((sum, h) => sum + marketValue(h, prices[h.ticker] ?? 0), 0)
@@ -149,24 +147,48 @@ export default function Dashboard() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {buyCandidates.length > 0 && (
-        <Link
-          to="/watchlist"
-          className="block bg-emerald-50 border border-emerald-300 rounded-lg p-4 hover:border-emerald-500"
-        >
-          <p className="text-sm font-medium text-emerald-600 mb-1">
+        <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-4 space-y-4">
+          <p className="text-sm font-medium text-emerald-600">
             {buyCandidates.length} saham mencapai margin of safety ≥ {(BUY_THRESHOLD_MOS * 100).toFixed(0)}%
           </p>
-          {candidatesNotOwned.length > 0 && (
-            <p className="text-xs text-emerald-700">
-              <span className="font-medium">Watchlist:</span> {fmtCandidates(candidatesNotOwned)}
-            </p>
-          )}
-          {candidatesOwned.length > 0 && (
-            <p className="text-xs text-emerald-700 mt-1">
-              <span className="font-medium">Di portofolio:</span> {fmtCandidates(candidatesOwned)}
-            </p>
-          )}
-        </Link>
+          {[
+            { title: 'Di Portofolio', list: candidatesOwned },
+            { title: 'Watchlist (belum dimiliki)', list: candidatesNotOwned },
+          ]
+            .filter((s) => s.list.length > 0)
+            .map((s) => (
+              <div key={s.title}>
+                <p className="text-xs font-medium text-emerald-700 mb-1">
+                  {s.title} ({s.list.length})
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-emerald-900">
+                    <thead className="text-xs text-emerald-700 text-left">
+                      <tr>
+                        <th className="py-1 pr-2 font-medium">Ticker</th>
+                        <th className="py-1 pr-2 font-medium text-right">Harga</th>
+                        <th className="py-1 pr-2 font-medium text-right">Nilai Wajar</th>
+                        <th className="py-1 font-medium text-right">MoS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.list.map((c) => (
+                        <tr key={c.row.ticker} className="border-t border-emerald-200">
+                          <td className="py-1 pr-2 font-medium">{c.row.ticker}</td>
+                          <td className="py-1 pr-2 text-right">{c.price ? fmtRp(c.price) : '-'}</td>
+                          <td className="py-1 pr-2 text-right">{c.row.nilai_wajar ? fmtRp(c.row.nilai_wajar) : '-'}</td>
+                          <td className="py-1 text-right font-medium">+{(c.mos! * 100).toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          <Link to="/watchlist" className="block text-xs text-emerald-700 underline">
+            Buka Watchlist →
+          </Link>
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-3">
