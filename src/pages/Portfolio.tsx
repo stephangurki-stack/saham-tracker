@@ -41,17 +41,19 @@ function HoldingsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm table-fixed min-w-[480px]">
+      <table className="w-full text-sm table-fixed min-w-[520px]">
         <colgroup>
+          <col style={{ width: '6%' }} />
+          <col style={{ width: '16%' }} />
+          <col style={{ width: '14%' }} />
           <col style={{ width: '17%' }} />
-          <col style={{ width: '15%' }} />
-          <col style={{ width: '18%' }} />
+          <col style={{ width: '16%' }} />
           <col style={{ width: '17%' }} />
-          <col style={{ width: '18%' }} />
-          <col style={{ width: '15%' }} />
+          <col style={{ width: '14%' }} />
         </colgroup>
         <thead className="border-b border-slate-300">
           <tr>
+            <th className={`${th} !text-left`}>No</th>
             <th className={`${th} !text-left`}>Saham</th>
             <th className={th}>Harga</th>
             <th className={th}>Market Value</th>
@@ -61,7 +63,7 @@ function HoldingsTable({
           </tr>
         </thead>
         <tbody>
-          {held.map((h) => {
+          {held.map((h, i) => {
             const price = prices[h.ticker] ?? 0
             const gain = unrealizedGain(h, price)
             const gainPct = unrealizedGainPct(h, price)
@@ -73,6 +75,7 @@ function HoldingsTable({
             const dividend = dividendByTicker[h.ticker]
             return (
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200 align-top">
+                <td className="py-2 px-1.5 text-left text-slate-400">{i + 1}</td>
                 <td className="py-2 px-1.5 text-left">
                   <span className="font-medium">{h.ticker}</span>
                   <span className={sub}>
