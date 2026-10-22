@@ -8,6 +8,7 @@ const TABLES = [
   'dividend_targets',
   'watchlist',
   'stock_analyses',
+  'stock_thesis',
   'portfolio_snapshots',
 ] as const
 

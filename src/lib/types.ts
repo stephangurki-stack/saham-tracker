@@ -116,3 +116,32 @@ export interface StockAnalysis {
   created_at: string
   updated_at: string
 }
+
+export type StockType = 'Q' | 'V' | 'S'
+
+export interface StockThesis {
+  id: string
+  user_id: string
+  ticker: string
+  jenis: StockType
+  is_bank: boolean
+  is_msci: boolean
+  tanggal_initiate: string | null
+  sumber: string | null
+  ringkasan: string
+  alasan_beli: string
+  pematah_tesis: string[]
+  nilai_wajar_3th: number | null
+  dividend_yield_pct: number | null
+  harga_pemeriksaan_terakhir: number | null
+  tanggal_pemeriksaan_terakhir: string | null
+  tanda_bahaya: boolean
+  tesis_patah: boolean
+  pengganti_lebih_baik: boolean
+  saringan_lolos: boolean | null
+  fscore: number | null
+  roe_ok: boolean | null
+  checklist_lengkap: boolean
+  created_at: string
+  updated_at: string
+}

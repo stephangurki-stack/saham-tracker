@@ -10,6 +10,7 @@ const navItems = [
   { to: '/dividen', label: 'Dividen' },
   { to: '/watchlist', label: 'Watchlist' },
   { to: '/analisa', label: 'Analisa' },
+  { to: '/thesis', label: 'Thesis' },
   { to: '/sekuritas', label: 'Sekuritas' },
 ]
 
