@@ -467,10 +467,13 @@ export default function Thesis() {
             }}
             className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap ${tab === t ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}
           >
-            {t === 'portofolio' ? `Portofolio · Jual/Tahan (${portfolioRows.length})` : `Watchlist · Beli (${watchRows.length})`}
+            {t === 'portofolio' ? `Portofolio (${portfolioRows.length})` : `Watchlist (${watchRows.length})`}
           </button>
         ))}
       </div>
+      <p className="text-xs text-slate-400">
+        {tab === 'portofolio' ? 'Keputusan jual / tahan / tambah untuk saham yang sudah dimiliki.' : 'Keputusan beli untuk saham di watchlist yang belum dimiliki.'}
+      </p>
       {tab === 'portofolio' && actionCount > 0 && (
         <p className="text-xs text-amber-700">{actionCount} saham punya sinyal selain TAHAN.</p>
       )}
