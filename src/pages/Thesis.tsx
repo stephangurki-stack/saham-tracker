@@ -456,7 +456,7 @@ export default function Thesis() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(['portofolio', 'watchlist'] as const).map((t) => (
           <button
             key={t}
