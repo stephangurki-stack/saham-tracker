@@ -43,13 +43,14 @@ function HoldingsTable({
     <div className="overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <colgroup>
-          <col style={{ width: '5%' }} />
-          <col style={{ width: '17%' }} />
+          <col style={{ width: '4%' }} />
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '12%' }} />
           <col style={{ width: '14%' }} />
-          <col style={{ width: '17%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '17%' }} />
+          <col style={{ width: '13%' }} />
           <col style={{ width: '14%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '15%' }} />
         </colgroup>
         <thead className="border-b border-slate-300">
           <tr>
@@ -60,6 +61,7 @@ function HoldingsTable({
             <th className={th}>P/L</th>
             <th className={th}>Nilai Wajar</th>
             <th className={th}>Dividen</th>
+            <th className={th}>Untung Total</th>
           </tr>
         </thead>
         <tbody>
@@ -73,6 +75,9 @@ function HoldingsTable({
             const mos = fairValue && price ? marginOfSafety(fairValue, price) : null
             const gainColor = gain >= 0 ? 'text-emerald-600' : 'text-red-600'
             const dividend = dividendByTicker[h.ticker]
+            const totalGain = gain + (dividend ?? 0)
+            const totalGainPct = h.costBasis > 0 ? totalGain / h.costBasis : 0
+            const totalColor = totalGain >= 0 ? 'text-emerald-600' : 'text-red-600'
             return (
               <tr key={`${h.security_id}-${h.ticker}`} className="border-t border-slate-200 align-top">
                 <td className="py-2 pl-0 pr-1 text-left text-slate-400">{i + 1}</td>
@@ -109,6 +114,10 @@ function HoldingsTable({
                 <td className="py-2 px-1.5 text-right">
                   {dividend ? fmtCompact(dividend) : '-'}
                   <span className={sub}>Bobot {fmtPctDec(weight)}</span>
+                </td>
+                <td className={`py-2 px-1.5 text-right font-medium ${totalColor}`}>
+                  {fmtSigned(totalGain)}
+                  <span className="block text-xs font-normal">{(totalGainPct > 0 ? '+' : '') + fmtPctDec(totalGainPct)}</span>
                 </td>
               </tr>
             )
